@@ -18,6 +18,15 @@ export function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
+/**
+ * Perkiraan kasar jumlah token, ~4 karakter per token. Hanya dipakai untuk
+ * telemetri panel — angkanya harus ikut respons yang benar-benar tampil,
+ * bukan konstanta yang menjadi bohong begitu jawabannya live.
+ */
+export function estimateTokens(text: string): number {
+  return Math.max(1, Math.round(text.trim().length / 4));
+}
+
 /** Unigram + bigram ternormalisasi, membuang kata sangat pendek. */
 function tokenize(text: string): Set<string> {
   const words = text

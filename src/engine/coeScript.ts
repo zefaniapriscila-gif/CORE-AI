@@ -115,7 +115,8 @@ export const CONSOLE_LINES: Record<string, string[]> = {
   goal: ['content-script injected @ gemini.google.com', 'menunggu deklarasi tujuan pengguna'],
   normal: [
     'MutationObserver attached → div[role="main"]',
-    'respons Gemini diekstrak · 148 token',
+    // {tokens} diisi App dari respons yang benar-benar tampil.
+    'respons Gemini diekstrak · {tokens} token',
     'raw_response disimpan ke session store',
   ],
   intercept: [
