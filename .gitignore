@@ -43,6 +43,9 @@ build/
 *.sln
 *.sw?
 
+# Local agent settings
+.claude/settings.local.json
+
 # System files
 .DS_Store
 .DS_Store?

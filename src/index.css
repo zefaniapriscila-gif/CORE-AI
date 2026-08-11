@@ -1,25 +1,199 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+/* ==========================================================================
+   CORE AI — sistem desain
+   Dua permukaan yang sengaja dibenturkan:
+   · paper = halaman Gemini (terang, datar, cepat)
+   · glass = ekstensi CORE AI (kaca gelap berlapis di atas cahaya aurora)
+   ========================================================================== */
+
+@theme {
+  /* Dasar dingin. Nama token dipertahankan, nilainya yang berubah. */
+  --color-ink-950: #06070c;
+  --color-ink-900: #0a0c14;
+  --color-ink-850: #0f1220;
+  --color-ink-800: #141828;
+  --color-ink-700: #1c2133;
+  --color-ink-600: #2a3145;
+  --color-ink-500: #3d465f;
+
+  /* Permukaan Gemini */
+  --color-paper-50: #ffffff;
+  --color-paper-100: #f8f9fb;
+  --color-paper-200: #eef1f6;
+  --color-paper-300: #dde2ea;
+  --color-paper-ink: #1c1b1a;
+  --color-paper-mid: #5f6368;
+
+  /* Teks di atas kaca */
+  --color-hi: #eef1f8;
+  --color-mid: #99a2ba;
+  --color-lo: #6a7490;
+
+  /* Brand — periwinkle, bukan oranye */
+  --color-core-400: #9ba6ff;
+  --color-core-500: #7b8cff;
+  --color-core-600: #5b6ae6;
+
+  /* Hue per mode kognitif — jadi warna aurora di balik kaca */
+  --color-mode-intercept: #ff5c7a;
+  --color-mode-socratic: #9d8bff;
+  --color-mode-reflective: #3fdcc8;
+  --color-mode-comparison: #4cc2ff;
+  --color-mode-scaffold: #a8e063;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Manrope", "Inter", ui-sans-serif, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
 
 @layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
   body {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    background-color: #F0EDEA;
-    color: #1e293b;
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01";
+    background: #06070c;
+    color: var(--color-hi);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-core-500) 45%, transparent);
+    color: #fff;
   }
 }
 
-.font-heading {
-  font-family: 'Space Grotesk', sans-serif;
+/* --------------------------------------------------------------------------
+   Kaca
+   -------------------------------------------------------------------------- */
+
+/* Pelat utama — panel, popup, dock, sheet.
+   Dua lapis: kilau di tepi atas, lalu scrim gelap supaya aurora di baliknya
+   jadi cahaya, bukan bidang warna. */
+.glass {
+  background:
+    linear-gradient(
+      170deg,
+      rgba(255, 255, 255, 0.08),
+      rgba(255, 255, 255, 0.022) 55%
+    ),
+    linear-gradient(180deg, rgba(7, 8, 14, 0.52), rgba(6, 7, 12, 0.72));
+  backdrop-filter: blur(30px) saturate(165%);
+  -webkit-backdrop-filter: blur(30px) saturate(165%);
+  box-shadow:
+    0 20px 60px -12px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.13),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.07);
 }
 
-.font-sans {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+/* Pelat lebar dan pendek (lembar teori) butuh scrim lebih tebal, karena
+   blob aurora menutupi porsi permukaan yang jauh lebih besar. */
+.glass-deep {
+  background:
+    linear-gradient(
+      170deg,
+      rgba(255, 255, 255, 0.075),
+      rgba(255, 255, 255, 0.02) 55%
+    ),
+    linear-gradient(180deg, rgba(7, 8, 14, 0.78), rgba(6, 7, 12, 0.88));
+  backdrop-filter: blur(34px) saturate(160%);
+  -webkit-backdrop-filter: blur(34px) saturate(160%);
+  box-shadow:
+    0 26px 70px -14px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.07);
 }
 
-/* Anti Copy-Paste CSS (Sub-Modul 2 — Esai halaman 22) */
+/* Lapis kedua di dalam pelat — lebih tipis supaya hierarki tetap terbaca. */
+.glass-soft {
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.055);
+}
+
+/* Kaca bertinta warna mode. --tint diisi dari komponen. */
+.glass-tint {
+  background: linear-gradient(
+    170deg,
+    color-mix(in srgb, var(--tint) 16%, transparent),
+    color-mix(in srgb, var(--tint) 6%, transparent)
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 0 0 1px color-mix(in srgb, var(--tint) 26%, transparent);
+}
+
+/* Garis pemisah setipis mungkin. */
+.hairline {
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.07);
+}
+.hairline-t {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+/* --------------------------------------------------------------------------
+   Aurora — cahaya berwarna di balik kaca, ikut mode aktif
+   -------------------------------------------------------------------------- */
+
+.aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.aurora::before,
+.aurora::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(78px);
+  transition: background 700ms ease;
+}
+
+.aurora::before {
+  width: 300px;
+  height: 300px;
+  top: -130px;
+  right: -110px;
+  opacity: 0.34;
+  background: var(--tint, #7b8cff);
+  animation: drift 18s ease-in-out infinite;
+}
+
+.aurora::after {
+  width: 260px;
+  height: 260px;
+  bottom: -140px;
+  left: -100px;
+  opacity: 0.22;
+  background: var(--tint2, #4cc2ff);
+  animation: drift 22s ease-in-out infinite reverse;
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-24px, 30px, 0) scale(1.12);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Utilitas
+   -------------------------------------------------------------------------- */
+
+/* Anti copy-paste — Sub-Modul 2, esai hal. 20 */
 .core-no-copy {
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -28,41 +202,184 @@
   cursor: default;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 5px;
+/* Penanda halus saat teks Gemini dikunci */
+.core-locked {
+  position: relative;
+}
+.core-locked::after {
+  content: "";
+  position: absolute;
+  inset: -8px -12px;
+  pointer-events: none;
+  border-radius: 14px;
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 92, 122, 0.045) 0 7px,
+    transparent 7px 14px
+  );
+  box-shadow: inset 0 0 0 1px rgba(255, 92, 122, 0.18);
 }
 
-::-webkit-scrollbar-track {
+/* --------------------------------------------------------------------------
+   Scrollbar
+   -------------------------------------------------------------------------- */
+
+.scroll-ink::-webkit-scrollbar {
+  width: 6px;
+}
+.scroll-ink::-webkit-scrollbar-track {
   background: transparent;
 }
-
-::-webkit-scrollbar-thumb {
-  background: #D1CCC4;
-  border-radius: 999px;
+.scroll-ink::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 99px;
+}
+.scroll-ink::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #B8B2A8;
+.scroll-paper::-webkit-scrollbar {
+  width: 8px;
+}
+.scroll-paper::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scroll-paper::-webkit-scrollbar-thumb {
+  background: #d3d8e0;
+  border-radius: 99px;
+}
+.scroll-paper::-webkit-scrollbar-thumb:hover {
+  background: #b9c0cb;
 }
 
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+/* --------------------------------------------------------------------------
+   Animasi
+   -------------------------------------------------------------------------- */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-4px); }
-  50% { transform: translateX(4px); }
-  75% { transform: translateX(-4px); }
+@keyframes slideInPanel {
+  from {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-out;
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-.animate-shake {
-  animation: shake 0.3s ease-out;
+@keyframes nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-5px);
+  }
+  40% {
+    transform: translateX(5px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(3px);
+  }
+}
+
+@keyframes haloRing {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-core-500) 50%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 11px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@keyframes sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+.anim-rise {
+  animation: rise 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.anim-panel {
+  animation: slideInPanel 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.anim-pop {
+  animation: popIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.anim-nudge {
+  animation: nudge 0.4s ease-out;
+}
+.anim-ring {
+  animation: haloRing 2.2s ease-out infinite;
+}
+.anim-blink {
+  animation: blink 1.6s ease-in-out infinite;
+}
+.anim-sweep::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 33%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.35),
+    transparent
+  );
+  animation: sweep 1.4s linear infinite;
+}
+
+.delay-1 {
+  animation-delay: 0.05s;
+}
+.delay-2 {
+  animation-delay: 0.1s;
+}
+.delay-3 {
+  animation-delay: 0.15s;
+}
+.delay-4 {
+  animation-delay: 0.2s;
 }

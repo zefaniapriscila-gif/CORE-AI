@@ -1,300 +1,339 @@
-import React, { useState, useCallback } from 'react';
-import { CognitiveMode, UserGoal } from './engine/coeTypes';
-import { DemoSidebar } from './components/demo/DemoSidebar';
-import { BrowserFrame } from './components/demo/BrowserFrame';
-import { WelcomeScreen } from './components/screens/WelcomeScreen';
-import { NormalModeScreen } from './components/screens/NormalModeScreen';
-import { InterceptScreen } from './components/screens/InterceptScreen';
-import { SocraticScreen } from './components/screens/SocraticScreen';
-import { ReflectiveScreen } from './components/screens/ReflectiveScreen';
-import { ComparisonScreen } from './components/screens/ComparisonScreen';
-import { ScaffoldScreen } from './components/screens/ScaffoldScreen';
-import { RatingScreen } from './components/screens/RatingScreen';
-import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
-import { DEMO_STEPS } from './engine/coeTypes';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { BrowserChrome } from './components/chrome/BrowserChrome';
+import { ExtensionPopup } from './components/chrome/ExtensionPopup';
+import { GeminiSurface } from './components/gemini/GeminiSurface';
+import { CorePanel } from './components/panel/CorePanel';
+import { IdleStep, NormalStep } from './components/panel/steps/StandbyStep';
+import { InterceptStep } from './components/panel/steps/InterceptStep';
+import { SocraticStep } from './components/panel/steps/SocraticStep';
+import { ReflectiveStep } from './components/panel/steps/ReflectiveStep';
+import { ComparisonStep } from './components/panel/steps/ComparisonStep';
+import { ScaffoldStep } from './components/panel/steps/ScaffoldStep';
+import { RatingStep } from './components/panel/steps/RatingStep';
+import { PresenterDock } from './components/presenter/PresenterDock';
+import { TheorySheet } from './components/presenter/TheorySheet';
+import { PanelBody } from './components/panel/CorePanel';
+import { PrimaryButton } from './components/ui/primitives';
+import { Stage, STAGE_ORDER, stepOf, Turn, UserGoal } from './engine/coeTypes';
+import {
+  CONSOLE_LINES,
+  FOLLOW_UP,
+  GEMINI_ANSWER,
+  GOALS,
+  QUESTION,
+  REFLECTIVE_SAMPLE_SUMMARY,
+  SOCRATIC_QUESTIONS,
+  SOCRATIC_SAMPLE_ANSWER,
+} from './engine/coeScript';
+import { countWords } from './engine/dualLayerValidator';
 
-// --- Demo data matching the essay's cognitive offloading topic ---
-const DEMO_USER_QUESTION = 'Jelaskan apa itu cognitive offloading dan dampaknya terhadap working memory mahasiswa';
+/** Tahapan yang menampilkan side panel. Sebelum ini, hanya popup toolbar. */
+const PANEL_STAGES: Stage[] = STAGE_ORDER.filter((s) => s !== 'goal');
 
-const DEMO_AI_RESPONSE = `Cognitive offloading adalah kecenderungan individu untuk mengalihkan proses pengolahan informasi, penalaran, dan pengambilan keputusan kepada sistem eksternal seperti AI.
+/**
+ * Isi thread Gemini diturunkan dari tahap, bukan ditumpuk lewat mutasi.
+ * Dengan begitu presenter bisa melompat maju-mundur tanpa state kotor.
+ */
+function buildTurns(stage: Stage): Turn[] {
+  const q: Turn = { id: 'q', role: 'user', text: QUESTION };
+  const a: Turn = { id: 'a', role: 'gemini', text: GEMINI_ANSWER, locked: true };
+  const heldFollowUp: Turn = {
+    id: 'f',
+    role: 'user',
+    text: FOLLOW_UP,
+    held: true,
+  };
+  const sentFollowUp: Turn = { id: 'f', role: 'user', text: FOLLOW_UP };
+  const handover: Turn = {
+    id: 'c',
+    role: 'core',
+    text: 'Pertanyaan yang tadi ditahan sudah dilepas. Responsnya tidak diberikan utuh — Scaffold Prompt Builder memecahnya jadi petunjuk bertahap di panel kanan.',
+  };
 
-Dampak terhadap working memory mahasiswa:
+  switch (stage) {
+    case 'goal':
+      return [];
+    case 'normal':
+      return [q, a];
+    case 'intercept':
+    case 'socratic':
+    case 'reflective':
+    case 'comparison':
+      return [q, a, heldFollowUp];
+    case 'scaffold':
+    case 'rating':
+      return [q, a, sentFollowUp, handover];
+    default:
+      return [];
+  }
+}
 
-1. Penurunan aktivasi DLPFC (Dorsolateral Prefrontal Cortex) — area otak yang bertanggung jawab untuk mempertahankan dan memanipulasi informasi dalam working memory.
+export default function App() {
+  const [stage, setStage] = useState<Stage>('goal');
+  const [reached, setReached] = useState<Set<Stage>>(new Set(['goal']));
+  const [goal, setGoal] = useState<UserGoal | null>(null);
+  const [popupOpen, setPopupOpen] = useState(true);
 
-2. Degradasi information retrieval — proses mengingat kembali informasi menjadi lebih lambat dan kurang akurat karena working memory tidak dilatih aktif.
+  const [draft, setDraft] = useState('');
+  const [thinking, setThinking] = useState(false);
 
-3. Risiko digital amnesia — ketergantungan terhadap penyimpanan eksternal memicu synaptic pruning dan mengurangi konsolidasi memori jangka panjang.
-
-4. Illusion of learning — mahasiswa merasa memahami materi padahal belum membangun konstruk pengetahuan yang mendalam.`;
-
-const DEMO_FOLLOW_UP = 'Lalu bagaimana cara mencegah cognitive offloading saat menggunakan AI?';
-
-const DEMO_SOCRATIC_QUESTIONS = [
-  'Menurut pemahamanmu, apa perbedaan utama antara cognitive offloading dan retrieval practice dalam konteks penggunaan AI?',
-  'Bagaimana menurutmu dampak jangka panjang dari tidak melatih working memory secara aktif?',
-  'Dapatkah kamu memberikan contoh situasi di mana mahasiswa mengalami illusion of learning saat menggunakan GenAI?',
-];
-
-const DEMO_USER_SUMMARY = 'Cognitive offloading terjadi ketika mahasiswa terlalu bergantung pada AI untuk berpikir, sehingga working memory mereka melemah karena jarang dilatih. Ini menyebabkan kemampuan mengingat dan menganalisis menurun.';
-
-const DEMO_AI_COUNTERARGUMENT = `Rangkumanmu sudah menangkap esensi utama, namun ada aspek penting yang belum tercakup:
-
-• Kamu belum menyebutkan peran DLPFC — area spesifik otak yang terdampak langsung. Penurunan aktivasi DLPFC kanan adalah mekanisme neurologis utama, bukan sekadar "working memory melemah" secara umum.
-
-• Illusion of learning juga perlu ditekankan — mahasiswa bukan hanya "kemampuannya menurun", tapi secara aktif percaya bahwa mereka memahami materi padahal tidak.
-
-• Aspek synaptic pruning dan digital amnesia menunjukkan bahwa dampaknya bersifat fisiologis, bukan hanya kognitif.`;
-
-const DEMO_KEY_TAKEAWAY = 'Cognitive offloading bukan sekadar "malas berpikir" — ia memiliki mekanisme neurologis yang terukur (penurunan DLPFC) dan berdampak permanen jika tidak dimitigasi melalui intervensi aktif seperti retrieval practice dan structured prompting.';
-
-const DEMO_SCAFFOLD_HINTS = [
-  'Pikirkan dulu: apa yang membedakan "menggunakan AI sebagai alat bantu" vs "bergantung pada AI"?',
-  'Ingat kembali konsep retrieval practice dari jawaban sebelumnya — bagaimana prinsip ini bisa diterapkan saat berinteraksi dengan AI?',
-  'Pertimbangkan: apakah mungkin mencegah cognitive offloading tanpa mengurangi kemudahan penggunaan AI?',
-];
-
-const DEMO_PARTIAL_ANSWER = 'Pencegahan cognitive offloading memerlukan intervensi pada ___ (tingkat apa?). Salah satu strateginya adalah ___ (metode yang memaksa pengguna mengaktifkan working memory), yang diimplementasikan melalui teknik seperti ___ (contoh: pertanyaan pemantik, rangkuman mandiri, dll). Coba lengkapi bagian yang kosong berdasarkan pemahamanmu...';
-
-function App() {
-  const [currentMode, setCurrentMode] = useState<CognitiveMode>('welcome');
-  const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
-  const [userGoal, setUserGoal] = useState<UserGoal | null>(null);
-
-  // Normal mode state
-  const [aiResponse, setAiResponse] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [userQuestion, setUserQuestion] = useState('');
-
-  // Socratic
-  const [socraticAnswered, setSocraticAnswered] = useState(false);
-
-  // Reflective
-  const [reflectiveSubmitted, setReflectiveSubmitted] = useState(false);
-
-  // Rating
+  const [socraticAnswer, setSocraticAnswer] = useState('');
+  const [summary, setSummary] = useState('');
+  const [rating, setRating] = useState(0);
   const [ratingSubmitted, setRatingSubmitted] = useState(false);
 
-  const completeStep = useCallback((mode: CognitiveMode) => {
-    setCompletedSteps(prev => new Set([...prev, mode]));
+  const [theoryOpen, setTheoryOpen] = useState(false);
+
+  const step = stepOf(stage);
+  const turns = useMemo(() => buildTurns(stage), [stage]);
+  const panelVisible = PANEL_STAGES.includes(stage);
+  const coeOn = goal === 'instrumental';
+
+  /* --- Navigasi ------------------------------------------------------- */
+
+  const go = useCallback((next: Stage) => {
+    setStage(next);
+    setReached((prev) => new Set(prev).add(next));
+    setThinking(false);
+
+    // Lompat maju: isi state tahap sebelumnya dengan contoh agar layar utuh.
+    const i = STAGE_ORDER.indexOf(next);
+    if (i >= STAGE_ORDER.indexOf('normal')) setGoal('instrumental');
+    if (i > STAGE_ORDER.indexOf('socratic')) {
+      setSocraticAnswer((v) => v || SOCRATIC_SAMPLE_ANSWER);
+    }
+    if (i > STAGE_ORDER.indexOf('reflective')) {
+      setSummary((v) => v || REFLECTIVE_SAMPLE_SUMMARY);
+    }
+    setPopupOpen(next === 'goal');
+    setDraft(next === 'normal' ? FOLLOW_UP : '');
   }, []);
 
-  const navigateToMode = useCallback((mode: CognitiveMode) => {
-    // Reset states based on navigation
-    setCurrentMode(mode);
-    
-    // For demo, pre-populate states for past steps
-    if (mode === 'normal' || DEMO_STEPS.findIndex(s => s.id === mode) > DEMO_STEPS.findIndex(s => s.id === 'normal')) {
-      setUserGoal('instrumental');
-      setUserQuestion(DEMO_USER_QUESTION);
-      setAiResponse(DEMO_AI_RESPONSE);
-      setIsLoading(false);
-    }
-    if (DEMO_STEPS.findIndex(s => s.id === mode) > DEMO_STEPS.findIndex(s => s.id === 'socratic')) {
-      setSocraticAnswered(true);
-    }
-    if (DEMO_STEPS.findIndex(s => s.id === mode) > DEMO_STEPS.findIndex(s => s.id === 'reflective')) {
-      setReflectiveSubmitted(true);
-    }
+  const idx = STAGE_ORDER.indexOf(stage);
+  const goPrev = useCallback(() => {
+    if (idx > 0) go(STAGE_ORDER[idx - 1]);
+  }, [idx, go]);
+  const goNext = useCallback(() => {
+    if (idx < STAGE_ORDER.length - 1) go(STAGE_ORDER[idx + 1]);
+  }, [idx, go]);
+
+  const reset = useCallback(() => {
+    setStage('goal');
+    setReached(new Set(['goal']));
+    setGoal(null);
+    setPopupOpen(true);
+    setDraft('');
+    setSocraticAnswer('');
+    setSummary('');
+    setRating(0);
+    setRatingSubmitted(false);
+    setTheoryOpen(false);
   }, []);
 
-  // Step order for next/prev
-  const modeOrder: CognitiveMode[] = ['welcome', 'normal', 'intercept', 'socratic', 'reflective', 'comparison', 'scaffold', 'rating'];
-  const currentIdx = modeOrder.indexOf(currentMode);
+  /* --- Pintasan keyboard untuk presenter ------------------------------- */
 
-  const goNext = () => {
-    if (currentIdx < modeOrder.length - 1) {
-      completeStep(currentMode);
-      navigateToMode(modeOrder[currentIdx + 1]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = document.activeElement;
+      const typing =
+        el instanceof HTMLTextAreaElement || el instanceof HTMLInputElement;
+
+      if (e.key === 'Escape') return setTheoryOpen(false);
+      if (typing) return;
+      if (e.key === 'ArrowRight') goNext();
+      if (e.key === 'ArrowLeft') goPrev();
+      if (e.key.toLowerCase() === 't') setTheoryOpen((v) => !v);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [goNext, goPrev]);
+
+  /* --- Aksi ------------------------------------------------------------ */
+
+  const pickGoal = (g: UserGoal) => {
+    setGoal(g);
+    setPopupOpen(false);
+    if (GOALS.find((o) => o.id === g)?.activatesCoe) {
+      setThinking(true);
+      setStage('normal');
+      setReached((prev) => new Set(prev).add('normal'));
+      window.setTimeout(() => {
+        setThinking(false);
+        setDraft(FOLLOW_UP);
+      }, 1500);
     }
   };
 
-  const goPrev = () => {
-    if (currentIdx > 0) {
-      navigateToMode(modeOrder[currentIdx - 1]);
-    }
+  /** Enter di composer Gemini saat Normal Mode memicu interception. */
+  const submitDraft = () => {
+    if (stage === 'normal' && draft.trim()) go('intercept');
   };
 
-  // --- Handlers for each mode ---
-  const handleSelectGoal = (goal: UserGoal) => {
-    setUserGoal(goal);
-    completeStep('welcome');
-    setCurrentMode('normal');
-  };
+  const metrics = [
+    { value: String(SOCRATIC_QUESTIONS.length), label: 'pertanyaan pemantik' },
+    {
+      value: `${countWords(summary || REFLECTIVE_SAMPLE_SUMMARY)} kata`,
+      label: 'rangkuman tervalidasi',
+    },
+    { value: '3', label: 'counterargument ditinjau' },
+    { value: '1', label: 'respons di-scaffold' },
+  ];
 
-  const handleSendQuestion = (q: string) => {
-    setUserQuestion(q || DEMO_USER_QUESTION);
-    setIsLoading(true);
-    setTimeout(() => {
-      setAiResponse(DEMO_AI_RESPONSE);
-      setIsLoading(false);
-    }, 1500);
-  };
+  /* --- Isi panel per tahap --------------------------------------------- */
 
-  const handleProceedToSocratic = () => {
-    completeStep('intercept');
-    setCurrentMode('socratic');
-  };
-
-  const handleSocraticAnswer = (answer: string) => {
-    setSocraticAnswered(true);
-    setTimeout(() => {
-      completeStep('socratic');
-      setCurrentMode('reflective');
-    }, 800);
-  };
-
-  const handleReflectiveSummary = (summary: string) => {
-    setReflectiveSubmitted(true);
-    setTimeout(() => {
-      completeStep('reflective');
-      setCurrentMode('comparison');
-    }, 800);
-  };
-
-  const handleContinueAfterComparison = () => {
-    completeStep('comparison');
-    setCurrentMode('scaffold');
-  };
-
-  const handleEndSession = () => {
-    completeStep('comparison');
-    completeStep('scaffold');
-    setCurrentMode('rating');
-  };
-
-  const handleScaffoldFollowUp = (q: string) => {
-    // In demo, just show the scaffold response
-  };
-
-  const handleScaffoldEnd = () => {
-    completeStep('scaffold');
-    setCurrentMode('rating');
-  };
-
-  const handleRating = (rating: number) => {
-    setRatingSubmitted(true);
-    completeStep('rating');
-  };
-
-  // Render current screen inside browser frame
-  const renderScreen = () => {
-    switch (currentMode) {
-      case 'welcome':
-        return <WelcomeScreen onSelectGoal={handleSelectGoal} />;
+  const renderPanel = () => {
+    switch (stage) {
       case 'normal':
-        return (
-          <NormalModeScreen
-            onSendQuestion={handleSendQuestion}
-            aiResponse={aiResponse}
-            isLoading={isLoading}
-            userQuestion={userQuestion}
-          />
-        );
+        return <NormalStep extracted={GEMINI_ANSWER} />;
       case 'intercept':
-        return (
-          <InterceptScreen
-            originalQuestion={DEMO_FOLLOW_UP}
-            onProceedToSocratic={handleProceedToSocratic}
-          />
-        );
+        return <InterceptStep heldQuestion={FOLLOW_UP} onProceed={goNext} />;
       case 'socratic':
         return (
-          <SocraticScreen
-            socraticQuestions={DEMO_SOCRATIC_QUESTIONS}
-            onSubmitAnswer={handleSocraticAnswer}
-            isAnswered={socraticAnswered}
+          <SocraticStep
+            questions={SOCRATIC_QUESTIONS}
+            initialAnswer={socraticAnswer}
+            onSubmit={(a) => {
+              setSocraticAnswer(a);
+              go('reflective');
+            }}
           />
         );
       case 'reflective':
         return (
-          <ReflectiveScreen
-            aiOriginalResponse={DEMO_AI_RESPONSE}
-            onSubmitSummary={handleReflectiveSummary}
-            isSubmitted={reflectiveSubmitted}
+          <ReflectiveStep
+            rawResponse={GEMINI_ANSWER}
+            initialSummary={summary}
+            onSubmit={(s) => {
+              setSummary(s);
+              go('comparison');
+            }}
           />
         );
       case 'comparison':
         return (
-          <ComparisonScreen
-            userSummary={DEMO_USER_SUMMARY}
-            aiCounterargument={DEMO_AI_COUNTERARGUMENT}
-            keyTakeaway={DEMO_KEY_TAKEAWAY}
-            onContinue={handleContinueAfterComparison}
-            onEndSession={handleEndSession}
+          <ComparisonStep
+            summary={summary || REFLECTIVE_SAMPLE_SUMMARY}
+            onContinue={() => go('scaffold')}
+            onEnd={() => go('rating')}
           />
         );
       case 'scaffold':
-        return (
-          <ScaffoldScreen
-            scaffoldHints={DEMO_SCAFFOLD_HINTS}
-            partialAnswer={DEMO_PARTIAL_ANSWER}
-            onSubmitFollowUp={handleScaffoldFollowUp}
-            onEndSession={handleScaffoldEnd}
-          />
-        );
+        return <ScaffoldStep question={FOLLOW_UP} onEnd={() => go('rating')} />;
       case 'rating':
         return (
-          <RatingScreen
-            onSubmitRating={handleRating}
-            isSubmitted={ratingSubmitted}
+          <RatingStep
+            metrics={metrics}
+            rating={rating}
+            submitted={ratingSubmitted}
+            onSubmit={(r) => {
+              setRating(r);
+              setRatingSubmitted(true);
+            }}
           />
         );
       default:
-        return <WelcomeScreen onSelectGoal={handleSelectGoal} />;
+        return <IdleStep />;
     }
   };
 
+  /* --- Layar ------------------------------------------------------------ */
+
   return (
-    <div className="h-screen w-screen flex bg-[#F0EDEA] overflow-hidden font-sans">
-      {/* Left Sidebar */}
-      <DemoSidebar
-        currentMode={currentMode}
-        onNavigateStep={navigateToMode}
-        completedSteps={completedSteps}
+    <div className="h-full w-full flex flex-col bg-[#06060a] relative overflow-hidden">
+      {/* Cahaya panggung */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(110% 70% at 22% -8%, rgba(123,140,255,.16), transparent 58%), radial-gradient(90% 60% at 85% 105%, rgba(76,194,255,.11), transparent 62%), radial-gradient(70% 50% at 65% 40%, rgba(157,139,255,.07), transparent 70%)',
+        }}
       />
 
-      {/* Right content: Browser Frame */}
-      <main className="flex-1 flex flex-col p-5 overflow-hidden">
-        {/* Top bar with navigation controls */}
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="font-heading text-sm font-bold text-slate-800">
-              {DEMO_STEPS.find(s => s.id === currentMode)?.label || 'CORE AI Demo'}
-            </h2>
-            <p className="text-[10px] text-slate-500 mt-0.5">
-              {DEMO_STEPS.find(s => s.id === currentMode)?.theory || ''}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={goPrev}
-              disabled={currentIdx <= 0}
-              className="flex items-center gap-1 px-3 py-1.5 bg-white rounded-lg border border-[#E3DDD3] text-[10px] font-bold text-slate-600 hover:bg-[#F0EBE5] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft className="w-3 h-3" />
-              Sebelumnya
-            </button>
-            <button
-              onClick={goNext}
-              disabled={currentIdx >= modeOrder.length - 1}
-              className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-[#F4680A] to-[#F99D45] rounded-lg text-[10px] font-bold text-white hover:shadow-md hover:shadow-orange-500/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              Selanjutnya
-              <ChevronRight className="w-3 h-3" />
-            </button>
-          </div>
-        </div>
+      <div className="flex-1 min-h-0 p-6 pb-2 relative">
+        <BrowserChrome
+          extensionActive={coeOn}
+          attention={stage === 'goal' && !goal}
+          panelOpen={panelVisible}
+          onTogglePanel={() =>
+            stage === 'goal' ? setPopupOpen((v) => !v) : undefined
+          }
+          popup={
+            popupOpen && stage === 'goal' ? (
+              <ExtensionPopup onSelect={pickGoal} selected={goal} />
+            ) : undefined
+          }
+        >
+          <GeminiSurface
+            turns={turns}
+            draft={draft}
+            onDraftChange={setDraft}
+            onSubmit={submitDraft}
+            intercepted={stage === 'intercept'}
+            locked={stage === 'reflective'}
+            thinking={thinking}
+            coeActive={coeOn && panelVisible}
+          />
 
-        {/* Browser Frame */}
-        <div className="flex-1 min-h-0">
-          <BrowserFrame>
-            {renderScreen()}
-          </BrowserFrame>
-        </div>
-      </main>
+          {panelVisible && step && (
+            <CorePanel
+              mode={step.mode}
+              module={step.module}
+              consoleLines={CONSOLE_LINES[stage] ?? []}
+            >
+              {renderPanel()}
+            </CorePanel>
+          )}
+        </BrowserChrome>
+
+        {/* Panel penolakan saat tujuan non-instrumental dipilih */}
+        {stage === 'goal' && goal && goal !== 'instrumental' && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="pointer-events-auto relative w-[390px] rounded-3xl overflow-hidden bg-ink-950 anim-pop">
+              <div
+                className="aurora"
+                style={{
+                  ['--tint' as string]: 'var(--color-lo)',
+                  ['--tint2' as string]: 'var(--color-core-500)',
+                }}
+              />
+              <div className="relative glass rounded-3xl">
+                <PanelBody
+                  eyebrow="COE dinonaktifkan"
+                  title={<>Kali ini CORE AI menyingkir</>}
+                  lede={
+                    <>
+                      Tujuanmu bukan instrumental. Menambah friksi pada
+                      percakapan ringan hanya membebani tanpa manfaat belajar —
+                      jadi ekstensi tidak ikut campur.
+                    </>
+                  }
+                >
+                  <PrimaryButton onClick={() => setPopupOpen(true)}>
+                    Pilih tujuan lain
+                  </PrimaryButton>
+                </PanelBody>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <TheorySheet
+          stage={stage}
+          open={theoryOpen}
+          onClose={() => setTheoryOpen(false)}
+        />
+      </div>
+
+      <PresenterDock
+        stage={stage}
+        reached={reached}
+        onGo={go}
+        onPrev={goPrev}
+        onNext={goNext}
+        onReset={reset}
+        theoryOpen={theoryOpen}
+        onToggleTheory={() => setTheoryOpen((v) => !v)}
+      />
     </div>
   );
 }
-
-export default App;
