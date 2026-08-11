@@ -65,7 +65,7 @@ export const CorePanel: React.FC<Props> = ({
             {[MoreHorizontal, Minus, X].map((Ic, i) => (
               <div
                 key={i}
-                className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-white/7 hover:text-mid transition-colors"
+                className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-black/[.055] hover:text-mid transition-colors"
               >
                 <Ic className="w-[15px] h-[15px]" />
               </div>
@@ -159,7 +159,7 @@ export const PanelBody: React.FC<{
           WebkitMaskImage:
             'linear-gradient(to bottom, transparent, #000 42px, #000 100%)',
           background:
-            'linear-gradient(to top, rgba(6,7,12,.9) 40%, rgba(6,7,12,0))',
+            'linear-gradient(to top, rgba(250,252,255,.94) 40%, rgba(250,252,255,0))',
         }}
       >
         {action}

@@ -29,14 +29,14 @@ export const PrimaryButton: React.FC<
       disabled
         ? undefined
         : {
-            background: `linear-gradient(175deg, color-mix(in srgb, ${tone} 30%, transparent), color-mix(in srgb, ${tone} 13%, transparent))`,
-            boxShadow: `inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 0 1px color-mix(in srgb, ${tone} 42%, transparent), 0 8px 24px -8px color-mix(in srgb, ${tone} 55%, transparent)`,
+            background: `linear-gradient(175deg, color-mix(in srgb, ${tone} 92%, white), ${tone})`,
+            boxShadow: `inset 0 1px 0 rgba(255,255,255,.25), 0 8px 22px -9px color-mix(in srgb, ${tone} 80%, transparent)`,
           }
     }
     className={`${full ? 'w-full' : ''} h-11 px-5 rounded-2xl text-[13.5px] font-medium text-white
-      inline-flex items-center justify-center gap-2 transition-all duration-200 backdrop-blur-md
-      hover:brightness-125 active:scale-[.985]
-      disabled:bg-white/4 disabled:text-lo disabled:shadow-none disabled:cursor-not-allowed
+      inline-flex items-center justify-center gap-2 transition-all duration-200
+      hover:brightness-110 active:scale-[.985]
+      disabled:bg-black/[.05] disabled:text-lo disabled:shadow-none disabled:cursor-not-allowed
       disabled:hover:brightness-100 ${className}`}
   >
     {children}
@@ -53,7 +53,7 @@ export const GhostButton: React.FC<{
     onClick={onClick}
     className={`h-11 px-5 rounded-2xl text-[13.5px] font-medium text-mid glass-soft backdrop-blur-md
       inline-flex items-center justify-center gap-2 transition-all duration-200
-      hover:bg-white/8 hover:text-hi active:scale-[.985] ${className}`}
+      hover:bg-black/[.07] hover:text-hi active:scale-[.985] ${className}`}
   >
     {children}
   </button>
@@ -72,7 +72,7 @@ export const SectionLabel: React.FC<{
     <span className="text-[11.5px] font-medium tracking-wide text-lo shrink-0">
       {children}
     </span>
-    <span className="h-px flex-1 bg-white/7" />
+    <span className="h-px flex-1 bg-black/[.09]" />
   </div>
 );
 
@@ -118,7 +118,7 @@ export const Meter: React.FC<{
 }> = ({ value, max = 100, tone, danger = false }) => {
   const c = danger ? 'var(--color-mode-intercept)' : tone;
   return (
-    <div className="h-1.5 w-full rounded-full bg-white/7 overflow-hidden">
+    <div className="h-1.5 w-full rounded-full bg-black/[.08] overflow-hidden">
       <div
         className="h-full rounded-full transition-[width] duration-500 ease-out"
         style={{

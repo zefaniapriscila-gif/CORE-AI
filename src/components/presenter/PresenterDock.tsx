@@ -1,5 +1,11 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, BookOpen, RotateCcw } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  BookOpen,
+  RotateCcw,
+  Home,
+} from 'lucide-react';
 import { CoreMark } from '../brand/CoreMark';
 import { MODE_COLOR, Stage, STEPS } from '../../engine/coeTypes';
 
@@ -10,12 +16,14 @@ interface Props {
   onPrev: () => void;
   onNext: () => void;
   onReset: () => void;
+  /** Keluar dari simulasi, kembali ke halaman muka. */
+  onHome: () => void;
   theoryOpen: boolean;
   onToggleTheory: () => void;
 }
 
 const Key: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <kbd className="font-mono text-[9px] px-1.5 py-px rounded-md bg-white/8 text-lo">
+  <kbd className="font-mono text-[9px] px-1.5 py-px rounded-md bg-black/[.06] text-lo">
     {children}
   </kbd>
 );
@@ -31,6 +39,7 @@ export const PresenterDock: React.FC<Props> = ({
   onPrev,
   onNext,
   onReset,
+  onHome,
   theoryOpen,
   onToggleTheory,
 }) => {
@@ -38,10 +47,18 @@ export const PresenterDock: React.FC<Props> = ({
 
   return (
     <div className="shrink-0 flex justify-center px-6 pb-5 pt-1">
-      <div className="flex items-center gap-3 h-14 pl-4 pr-3 rounded-[20px] glass">
+      <div className="flex items-center gap-3 h-14 pl-2.5 pr-3 rounded-[20px] glass">
         {/* Identitas */}
-        <div className="flex items-center gap-2 pr-3 border-r border-white/8">
-          <span className="text-core-400">
+        <div className="flex items-center gap-2 pr-3 border-r border-black/[.09]">
+          <button
+            onClick={onHome}
+            title="Kembali ke beranda"
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-core-500
+              hover:bg-black/[.055] active:scale-95 transition-all"
+          >
+            <Home className="w-[17px] h-[17px]" />
+          </button>
+          <span className="text-core-400 hidden xl:block">
             <CoreMark className="w-[18px] h-[18px]" />
           </span>
           <div className="leading-none hidden xl:block">
@@ -66,7 +83,7 @@ export const PresenterDock: React.FC<Props> = ({
                 onClick={() => onGo(s.stage)}
                 title={s.label}
                 className={`h-9 rounded-xl flex items-center gap-2 transition-all duration-300 ${
-                  active ? 'px-3' : 'w-9 justify-center hover:bg-white/7'
+                  active ? 'px-3' : 'w-9 justify-center hover:bg-black/[.055]'
                 }`}
                 style={
                   active
@@ -103,25 +120,25 @@ export const PresenterDock: React.FC<Props> = ({
         </div>
 
         {/* Navigasi */}
-        <div className="flex items-center gap-1 pl-2 border-l border-white/8">
+        <div className="flex items-center gap-1 pl-2 border-l border-black/[.09]">
           <button
             onClick={onPrev}
             disabled={idx <= 0}
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-mid hover:bg-white/7 hover:text-hi transition-colors disabled:opacity-25 disabled:hover:bg-transparent"
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-mid hover:bg-black/[.055] hover:text-hi transition-colors disabled:opacity-25 disabled:hover:bg-transparent"
           >
             <ChevronLeft className="w-[18px] h-[18px]" />
           </button>
           <button
             onClick={onNext}
             disabled={idx >= STEPS.length - 1}
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-mid hover:bg-white/7 hover:text-hi transition-colors disabled:opacity-25 disabled:hover:bg-transparent"
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-mid hover:bg-black/[.055] hover:text-hi transition-colors disabled:opacity-25 disabled:hover:bg-transparent"
           >
             <ChevronRight className="w-[18px] h-[18px]" />
           </button>
           <button
             onClick={onReset}
             title="Ulang dari awal"
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-ink-500 hover:bg-white/7 hover:text-mid transition-colors"
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-ink-500 hover:bg-black/[.055] hover:text-mid transition-colors"
           >
             <RotateCcw className="w-4 h-4" />
           </button>

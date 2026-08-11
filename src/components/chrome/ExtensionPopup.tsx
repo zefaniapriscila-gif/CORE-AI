@@ -68,7 +68,7 @@ export const ExtensionPopup: React.FC<Props> = ({ onSelect, selected }) => (
               key={g.id}
               onClick={() => onSelect(g.id)}
               className={`group w-full text-left rounded-2xl px-3 py-2.5 flex items-start gap-3 transition-all anim-rise ${
-                isSel ? 'glass-soft' : 'hover:bg-white/6'
+                isSel ? 'glass-soft' : 'hover:bg-black/[.045]'
               }`}
               style={{ animationDelay: `${i * 45}ms` }}
             >
@@ -78,9 +78,10 @@ export const ExtensionPopup: React.FC<Props> = ({ onSelect, selected }) => (
                   isSel
                     ? {
                         background: 'var(--color-core-500)',
-                        boxShadow: '0 0 12px var(--color-core-500)',
+                        boxShadow:
+                          '0 0 12px color-mix(in srgb, var(--color-core-500) 55%, transparent)',
                       }
-                    : { boxShadow: 'inset 0 0 0 1.5px rgba(255,255,255,.18)' }
+                    : { boxShadow: 'inset 0 0 0 1.5px rgba(16,24,60,.22)' }
                 }
               >
                 {isSel && (
