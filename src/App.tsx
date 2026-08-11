@@ -10,22 +10,29 @@ import { ReflectiveStep } from './components/panel/steps/ReflectiveStep';
 import { ComparisonStep } from './components/panel/steps/ComparisonStep';
 import { ScaffoldStep } from './components/panel/steps/ScaffoldStep';
 import { RatingStep } from './components/panel/steps/RatingStep';
+import { LoadingStep } from './components/panel/steps/LoadingStep';
 import { PresenterDock } from './components/presenter/PresenterDock';
 import { TheorySheet } from './components/presenter/TheorySheet';
 import { PanelBody } from './components/panel/CorePanel';
 import { PrimaryButton } from './components/ui/primitives';
-import { Stage, STAGE_ORDER, stepOf, Turn, UserGoal } from './engine/coeTypes';
+import {
+  MODE_COLOR,
+  Stage,
+  STAGE_ORDER,
+  stepOf,
+  Turn,
+  UserGoal,
+} from './engine/coeTypes';
 import {
   CONSOLE_LINES,
   FOLLOW_UP,
-  GEMINI_ANSWER,
   GOALS,
   QUESTION,
   REFLECTIVE_SAMPLE_SUMMARY,
-  SOCRATIC_QUESTIONS,
   SOCRATIC_SAMPLE_ANSWER,
 } from './engine/coeScript';
 import { countWords } from './engine/dualLayerValidator';
+import { useCoe } from './engine/useCoe';
 
 /** Tahapan yang menampilkan side panel. Sebelum ini, hanya popup toolbar. */
 const PANEL_STAGES: Stage[] = STAGE_ORDER.filter((s) => s !== 'goal');
@@ -33,10 +40,13 @@ const PANEL_STAGES: Stage[] = STAGE_ORDER.filter((s) => s !== 'goal');
 /**
  * Isi thread Gemini diturunkan dari tahap, bukan ditumpuk lewat mutasi.
  * Dengan begitu presenter bisa melompat maju-mundur tanpa state kotor.
+ *
+ * `answerReady` menahan gelembung jawaban selama model masih menyusun, supaya
+ * naskah cadangan tidak sempat berkedip di layar sebelum ditimpa versi live.
  */
-function buildTurns(stage: Stage): Turn[] {
+function buildTurns(stage: Stage, answer: string, answerReady: boolean): Turn[] {
   const q: Turn = { id: 'q', role: 'user', text: QUESTION };
-  const a: Turn = { id: 'a', role: 'gemini', text: GEMINI_ANSWER, locked: true };
+  const a: Turn = { id: 'a', role: 'gemini', text: answer, locked: true };
   const heldFollowUp: Turn = {
     id: 'f',
     role: 'user',
@@ -50,23 +60,33 @@ function buildTurns(stage: Stage): Turn[] {
     text: 'Pertanyaan yang tadi ditahan sudah dilepas. Responsnya tidak diberikan utuh — Scaffold Prompt Builder memecahnya jadi petunjuk bertahap di panel kanan.',
   };
 
+  const answered = answerReady ? [a] : [];
+
   switch (stage) {
     case 'goal':
       return [];
     case 'normal':
-      return [q, a];
+      return [q, ...answered];
     case 'intercept':
     case 'socratic':
     case 'reflective':
     case 'comparison':
-      return [q, a, heldFollowUp];
+      return [q, ...answered, heldFollowUp];
     case 'scaffold':
     case 'rating':
-      return [q, a, sentFollowUp, handover];
+      return [q, ...answered, sentFollowUp, handover];
     default:
       return [];
   }
 }
+
+/** Tugas COE yang mengisi tiap tahap — dipakai untuk skeleton dan telemetri. */
+const STAGE_TASK = {
+  normal: 'answer',
+  socratic: 'socratic',
+  comparison: 'comparison',
+  scaffold: 'scaffold',
+} as const;
 
 export default function App() {
   const [stage, setStage] = useState<Stage>('goal');
@@ -75,7 +95,6 @@ export default function App() {
   const [popupOpen, setPopupOpen] = useState(true);
 
   const [draft, setDraft] = useState('');
-  const [thinking, setThinking] = useState(false);
 
   const [socraticAnswer, setSocraticAnswer] = useState('');
   const [summary, setSummary] = useState('');
@@ -84,17 +103,32 @@ export default function App() {
 
   const [theoryOpen, setTheoryOpen] = useState(false);
 
+  const {
+    content,
+    source,
+    loading,
+    ensureAnswer,
+    ensureSocratic,
+    ensureComparison,
+    ensureScaffold,
+    resetCoe,
+  } = useCoe();
+
   const step = stepOf(stage);
-  const turns = useMemo(() => buildTurns(stage), [stage]);
   const panelVisible = PANEL_STAGES.includes(stage);
   const coeOn = goal === 'instrumental';
+
+  const answerReady = source.answer !== 'pending';
+  const turns = useMemo(
+    () => buildTurns(stage, content.answer, answerReady),
+    [stage, content.answer, answerReady],
+  );
 
   /* --- Navigasi ------------------------------------------------------- */
 
   const go = useCallback((next: Stage) => {
     setStage(next);
     setReached((prev) => new Set(prev).add(next));
-    setThinking(false);
 
     // Lompat maju: isi state tahap sebelumnya dengan contoh agar layar utuh.
     const i = STAGE_ORDER.indexOf(next);
@@ -128,7 +162,44 @@ export default function App() {
     setRating(0);
     setRatingSubmitted(false);
     setTheoryOpen(false);
-  }, []);
+    resetCoe();
+  }, [resetCoe]);
+
+  /* --- Pemicu panggilan model ------------------------------------------ */
+
+  /**
+   * Setiap tahap meminta isinya sendiri. Fungsi `ensure*` idempoten, jadi
+   * bolak-balik lewat tombol presenter tidak menambah panggilan API.
+   */
+  useEffect(() => {
+    if (!coeOn) return;
+    switch (stage) {
+      case 'normal':
+      case 'intercept':
+        void ensureAnswer();
+        break;
+      case 'socratic':
+        void ensureSocratic();
+        break;
+      case 'reflective':
+        void ensureAnswer();
+        break;
+      case 'comparison':
+        void ensureComparison(summary || REFLECTIVE_SAMPLE_SUMMARY);
+        break;
+      case 'scaffold':
+        void ensureScaffold();
+        break;
+    }
+  }, [
+    stage,
+    coeOn,
+    summary,
+    ensureAnswer,
+    ensureSocratic,
+    ensureComparison,
+    ensureScaffold,
+  ]);
 
   /* --- Pintasan keyboard untuk presenter ------------------------------- */
 
@@ -154,13 +225,11 @@ export default function App() {
     setGoal(g);
     setPopupOpen(false);
     if (GOALS.find((o) => o.id === g)?.activatesCoe) {
-      setThinking(true);
       setStage('normal');
       setReached((prev) => new Set(prev).add('normal'));
-      window.setTimeout(() => {
-        setThinking(false);
-        setDraft(FOLLOW_UP);
-      }, 1500);
+      // Pertanyaan lanjutan baru muncul di composer setelah jawaban terbaca —
+      // urutan inilah yang membuat interception di tahap berikutnya masuk akal.
+      void ensureAnswer().then(() => setDraft(FOLLOW_UP));
     }
   };
 
@@ -170,27 +239,76 @@ export default function App() {
   };
 
   const metrics = [
-    { value: String(SOCRATIC_QUESTIONS.length), label: 'pertanyaan pemantik' },
+    { value: String(content.socratic.length), label: 'pertanyaan pemantik' },
     {
       value: `${countWords(summary || REFLECTIVE_SAMPLE_SUMMARY)} kata`,
       label: 'rangkuman tervalidasi',
     },
-    { value: '3', label: 'counterargument ditinjau' },
+    {
+      value: String(content.comparison.miss.length),
+      label: 'counterargument ditinjau',
+    },
     { value: '1', label: 'respons di-scaffold' },
   ];
+
+  /* --- Telemetri -------------------------------------------------------- */
+
+  /** Baris terakhir konsol menyatakan apakah tahap ini live atau naskah. */
+  const consoleLines = useMemo(() => {
+    const base = CONSOLE_LINES[stage] ?? [];
+    const task = STAGE_TASK[stage as keyof typeof STAGE_TASK];
+    if (!task) return base;
+
+    const state = source[task];
+    if (state === 'pending') return base;
+    return [
+      ...base,
+      state === 'live'
+        ? 'gemini-2.5-flash · respons live'
+        : 'jalur live gagal · memakai naskah cadangan',
+    ];
+  }, [stage, source]);
 
   /* --- Isi panel per tahap --------------------------------------------- */
 
   const renderPanel = () => {
     switch (stage) {
       case 'normal':
-        return <NormalStep extracted={GEMINI_ANSWER} />;
+        return loading.answer ? (
+          <LoadingStep
+            eyebrow="Sub-modul 1 · DOM Interceptor"
+            tone="var(--color-core-500)"
+            title={<>Mengamati respons Gemini</>}
+            lede={
+              <>
+                MutationObserver menunggu node jawaban selesai dirender sebelum
+                teksnya diekstrak jadi respons mentah.
+              </>
+            }
+          />
+        ) : (
+          <NormalStep extracted={content.answer} />
+        );
+
       case 'intercept':
         return <InterceptStep heldQuestion={FOLLOW_UP} onProceed={goNext} />;
+
       case 'socratic':
-        return (
+        return loading.socratic ? (
+          <LoadingStep
+            eyebrow="Sub-modul 3 · Socratic Prompt Builder"
+            tone={MODE_COLOR.socratic}
+            title={<>Menyusun pertanyaan pemantik</>}
+            lede={
+              <>
+                Pertanyaan dibangun dari respons yang barusan kamu baca, bukan
+                dari daftar siap pakai.
+              </>
+            }
+          />
+        ) : (
           <SocraticStep
-            questions={SOCRATIC_QUESTIONS}
+            questions={content.socratic}
             initialAnswer={socraticAnswer}
             onSubmit={(a) => {
               setSocraticAnswer(a);
@@ -198,10 +316,11 @@ export default function App() {
             }}
           />
         );
+
       case 'reflective':
         return (
           <ReflectiveStep
-            rawResponse={GEMINI_ANSWER}
+            rawResponse={content.answer}
             initialSummary={summary}
             onSubmit={(s) => {
               setSummary(s);
@@ -209,16 +328,51 @@ export default function App() {
             }}
           />
         );
+
       case 'comparison':
-        return (
+        return loading.comparison ? (
+          <LoadingStep
+            eyebrow="Sub-modul 3 · Reflective Prompt Builder"
+            tone={MODE_COLOR.comparison}
+            title={<>Membandingkan rangkumanmu</>}
+            lede={
+              <>
+                Rangkumanmu disandingkan dengan respons mentah untuk menemukan
+                apa yang tertangkap dan apa yang terlewat.
+              </>
+            }
+          />
+        ) : (
           <ComparisonStep
             summary={summary || REFLECTIVE_SAMPLE_SUMMARY}
+            comparison={content.comparison}
             onContinue={() => go('scaffold')}
             onEnd={() => go('rating')}
           />
         );
+
       case 'scaffold':
-        return <ScaffoldStep question={FOLLOW_UP} onEnd={() => go('rating')} />;
+        return loading.scaffold ? (
+          <LoadingStep
+            eyebrow="Sub-modul 3 · Scaffold Prompt Builder"
+            tone={MODE_COLOR.scaffold}
+            title={<>Memecah jawaban jadi petunjuk</>}
+            lede={
+              <>
+                Respons untuk pertanyaan yang tadi ditahan sedang dipotong jadi
+                bantuan bertahap, bukan jawaban utuh.
+              </>
+            }
+          />
+        ) : (
+          <ScaffoldStep
+            question={FOLLOW_UP}
+            hints={content.scaffold.hints}
+            partial={content.scaffold.partial}
+            onEnd={() => go('rating')}
+          />
+        );
+
       case 'rating':
         return (
           <RatingStep
@@ -231,6 +385,7 @@ export default function App() {
             }}
           />
         );
+
       default:
         return <IdleStep />;
     }
@@ -270,7 +425,7 @@ export default function App() {
             onSubmit={submitDraft}
             intercepted={stage === 'intercept'}
             locked={stage === 'reflective'}
-            thinking={thinking}
+            thinking={coeOn && loading.answer}
             coeActive={coeOn && panelVisible}
           />
 
@@ -278,7 +433,7 @@ export default function App() {
             <CorePanel
               mode={step.mode}
               module={step.module}
-              consoleLines={CONSOLE_LINES[stage] ?? []}
+              consoleLines={consoleLines}
             >
               {renderPanel()}
             </CorePanel>

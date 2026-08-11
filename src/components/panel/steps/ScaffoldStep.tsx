@@ -3,16 +3,22 @@ import { ArrowRight, Lock } from 'lucide-react';
 import { PanelBody } from '../CorePanel';
 import { PrimaryButton, SectionLabel } from '../../ui/primitives';
 import { MODE_COLOR } from '../../../engine/coeTypes';
-import { SCAFFOLD_HINTS, SCAFFOLD_PARTIAL } from '../../../engine/coeScript';
 
 interface Props {
   question: string;
+  hints: string[];
+  partial: string;
   onEnd: () => void;
 }
 
 const TONE = MODE_COLOR.scaffold;
 
-export const ScaffoldStep: React.FC<Props> = ({ question, onEnd }) => (
+export const ScaffoldStep: React.FC<Props> = ({
+  question,
+  hints,
+  partial,
+  onEnd,
+}) => (
   <PanelBody
     eyebrow="Sub-modul 3 · Scaffold Prompt Builder"
     tone={TONE}
@@ -44,7 +50,7 @@ export const ScaffoldStep: React.FC<Props> = ({ question, onEnd }) => (
           background: `linear-gradient(180deg, color-mix(in srgb, ${TONE} 45%, transparent), transparent)`,
         }}
       />
-      {SCAFFOLD_HINTS.map((h, i) => (
+      {hints.map((h, i) => (
         <li
           key={h}
           className="relative anim-rise"
@@ -72,7 +78,7 @@ export const ScaffoldStep: React.FC<Props> = ({ question, onEnd }) => (
       className="rounded-2xl px-4 py-4 core-no-copy backdrop-blur-md glass-tint"
       style={{ ['--tint' as string]: TONE }}
     >
-      <p className="text-[13px] leading-[1.75] text-hi">{SCAFFOLD_PARTIAL}</p>
+      <p className="text-[13px] leading-[1.75] text-hi">{partial}</p>
       <div className="mt-3.5 pt-3.5 hairline-t flex items-center gap-2">
         <Lock className="w-3 h-3 shrink-0" style={{ color: TONE }} />
         <span className="font-mono text-[10.5px]" style={{ color: TONE }}>
