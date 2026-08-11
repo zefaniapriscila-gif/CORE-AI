@@ -112,7 +112,9 @@ Pertanyaan: ${question}
 
 Format jawaban:
 - Satu paragraf pembuka yang mendefinisikan konsep intinya. Kalimat pertama
-  langsung berisi definisi — bukan menyebut ulang bahwa pengguna bertanya.
+  WAJIB dimulai dari nama konsep yang ditanyakan.
+  Salah: "Kamu bertanya tentang cognitive offloading…" / "Tentu, …"
+  Benar: "Cognitive offloading adalah …"
 - Lalu daftar bernomor 1 sampai 4. Tiap butir dimulai dengan frasa nama
   dampaknya, diikuti titik, lalu penjelasannya dalam dua sampai tiga kalimat.
 - Sebutkan mekanisme neurologis yang konkret dan dapat diverifikasi bila relevan.
