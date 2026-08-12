@@ -3,10 +3,11 @@ import { ArrowRight, Check, Plus } from 'lucide-react';
 import { PanelBody } from '../CorePanel';
 import { GhostButton, PrimaryButton, SectionLabel } from '../../ui/primitives';
 import { MODE_COLOR } from '../../../engine/coeTypes';
-import { COMPARISON } from '../../../engine/coeScript';
+import { ComparisonPayload } from '../../../engine/coeLive';
 
 interface Props {
   summary: string;
+  comparison: ComparisonPayload;
   onContinue: () => void;
   onEnd: () => void;
 }
@@ -14,7 +15,12 @@ interface Props {
 const TONE = MODE_COLOR.comparison;
 const OK = MODE_COLOR.reflective;
 
-export const ComparisonStep: React.FC<Props> = ({ summary, onContinue, onEnd }) => (
+export const ComparisonStep: React.FC<Props> = ({
+  summary,
+  comparison,
+  onContinue,
+  onEnd,
+}) => (
   <PanelBody
     eyebrow="Sub-modul 3 · Reflective Prompt Builder"
     tone={TONE}
@@ -47,7 +53,7 @@ export const ComparisonStep: React.FC<Props> = ({ summary, onContinue, onEnd }) 
     {/* Yang tertangkap */}
     <SectionLabel tone={OK}>Sudah tertangkap</SectionLabel>
     <ul className="space-y-2.5">
-      {COMPARISON.hit.map((h, i) => (
+      {comparison.hit.map((h, i) => (
         <li
           key={h}
           className="flex gap-2.5 anim-rise"
@@ -70,7 +76,7 @@ export const ComparisonStep: React.FC<Props> = ({ summary, onContinue, onEnd }) 
     {/* Yang terlewat */}
     <SectionLabel tone={TONE}>Belum tercakup</SectionLabel>
     <div className="space-y-2">
-      {COMPARISON.miss.map((m, i) => (
+      {comparison.miss.map((m, i) => (
         <div
           key={m.title}
           className="rounded-2xl px-4 py-3.5 anim-rise backdrop-blur-md glass-tint"
@@ -106,7 +112,7 @@ export const ComparisonStep: React.FC<Props> = ({ summary, onContinue, onEnd }) 
         <span className="text-[11.5px] font-medium text-lo">Intisari</span>
       </div>
       <p className="font-display text-[15.5px] font-medium leading-[1.5] -tracking-[.01em] text-hi">
-        {COMPARISON.takeaway}
+        {comparison.takeaway}
       </p>
     </div>
   </PanelBody>

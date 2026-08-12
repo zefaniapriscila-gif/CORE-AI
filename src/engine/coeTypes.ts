@@ -25,6 +25,12 @@ export type ModeKey =
 
 export type UserGoal = 'instrumental' | 'trivia' | 'interaksional' | 'other';
 
+/** Operasi COE yang dikerjakan model bahasa di server. */
+export type CoeTask = 'answer' | 'socratic' | 'comparison' | 'scaffold';
+
+/** Asal isi panel: dihasilkan model, atau naskah cadangan. */
+export type CoeSource = 'pending' | 'live' | 'script';
+
 export interface GoalOption {
   id: UserGoal;
   label: string;
