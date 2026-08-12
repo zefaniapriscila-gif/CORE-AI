@@ -9,7 +9,8 @@ Empat tahap:
    eksplisit per orang — tidak ada deteksi wajah di sini, angkanya diukur
    manual dan boleh digeser kalau hasilnya meleset.
 2. Lepas latar studio. Latar merah dipisah lewat kejenuhan warna; latar putih
-   lewat rona, karena kecerahannya nyaris sama dengan jas krem.
+   lewat rona, karena kecerahannya nyaris sama dengan jas krem. Sumber yang
+   sudah ber-alpha (bg "alpha") melewati tahap ini.
 3. Rapikan matte: ratakan gerigi, kikis tepi, buang bercak yang tidak menempel
    ke badan, lalu redam tumpahan warna latar di piksel tepi.
 4. Samakan bingkai: lebar kepala diseragamkan dan ubun-ubun ditaruh pada tinggi
@@ -42,12 +43,15 @@ JOBS = [
         "smooth": 0.0,  # rambut halus — perataan agresif akan menggumpalkannya
     },
     {
-        "src": "Risyah Eka Setyaningrum.jpeg",
+        # Sumber ini sudah dilepas latarnya di luar skrip, jadi tahap matte
+        # dilewati. Hasilnya jauh lebih bersih di tepi hijab daripada saat kami
+        # memisahkan latar putihnya sendiri — margin rona di sana cuma 1-2 poin.
+        "src": "risyahnobg.png",
         "slug": "risyah-eka-setyaningrum",
-        "crop": (255, 370, 600, 830),  # dari sumber 855x1280
-        "width": 432,
-        "bg": "white",
-        "smooth": 4.5,
+        "crop": None,  # sumber 573x737, nyaris 3:4
+        "width": 553,
+        "bg": "alpha",
+        "smooth": 0.0,
     },
     {
         "src": "Sarah Putri Nashira.png",
@@ -56,6 +60,40 @@ JOBS = [
         "width": 354,
         "bg": "red",
         "smooth": 0.0,
+        # Kepalanya kecil terhadap badan, jadi menyamakan lebar kepala ke ukuran
+        # penuh membuat bahunya terpotong kedua tepi kanvas. Dikecilkan sedikit
+        # supaya bahu masuk utuh; kepala jadi ~10% lebih kecil dari dua kartu
+        # lain, dan itu pilihan yang disengaja.
+        "zoom": 0.88,
+    },
+    {
+        # Satu-satunya foto yang tidak diambil di studio: latarnya dinding
+        # ruangan dengan kursi dan meja. Yang menyelamatkan pemisahannya bukan
+        # warna latar melainkan jasnya — hitam pekat, sementara seluruh latar
+        # terang dan condong dingin.
+        "src": "Satriyo Priyo Adi, S.Psi, M.Sc.jpeg",
+        "slug": "satriyo-priyo-adi",
+        "crop": None,  # sumber 226x300, praktis 3:4
+        "width": 452,  # naikkan 2x dulu supaya tepi matte tidak berundak
+        "bg": "white",
+        "smooth": 2.0,
+        # Ambang jauh lebih rendah daripada latar studio: dinding terukur 212
+        # dan turun sampai 133 di bagian yang teduh. Kemeja dan dasinya lolos
+        # ambang serendah ini juga, tapi selamat karena terkurung jas — tidak
+        # ada jalur piksel terang yang menyambungkannya ke tepi bingkai.
+        "white_th": (140, 6, 85, 0),
+        # Meja dan kursi di belakangnya nyaris netral, jadi baru tersapu setelah
+        # rambatan panjang. Dua puluh enam langkah menghabisi keduanya dan masih
+        # berhenti jauh sebelum menyentuh wajah.
+        "grow": 26,
+        # Sisa dua bercak: tulisan di dinding sedikit di atas bahu kiri, dan
+        # sudut meja di kanan. Keduanya hangat-netral, di luar jangkauan ambang.
+        "wipe": [(80, 40, 175, 140), (320, 320, 452, 430)],
+        # Kebalikan dari Sarah: ini potret sebatas dada, bukan setengah badan.
+        # Pada ukuran kepala yang sama, badannya berhenti seperempat kanvas dari
+        # dasar dan kartunya jadi banyak ruang kosong. Dibesarkan sampai penuh —
+        # bahunya sedikit terpotong tepi, sama seperti di foto aslinya.
+        "zoom": 1.32,
     },
 ]
 
@@ -73,7 +111,7 @@ def mask_red(a):
     return (r - mx > 100) & (mx < 120)
 
 
-def mask_white(a):
+def mask_white(a, th=(210, 5, 200, 0)):
     """Latar putih studio hampir sama terangnya dengan jas krem, jadi kecerahan
     saja tidak memisahkan. Pembedanya rona: latar condong biru (B > R),
     sedangkan jas, hijab, dan kulit selalu condong hangat (R > B).
@@ -84,11 +122,15 @@ def mask_white(a):
 
     Dikembalikan dua ambang: yang ketat dipakai sebagai benih, yang longgar
     sebagai batas tumbuh untuk menghabisi bayangan latar di dekat bahu.
+
+    Angkanya di atas berlaku untuk latar studio yang terang benderang. Foto
+    dengan latar lebih redup memberi ambangnya sendiri lewat `th`.
     """
+    smin, shue, lmin, lhue = th
     r, b = a[..., 0], a[..., 2]
     mn = a.min(axis=2)
-    strict = (mn > 210) & (b - r >= 5)
-    loose = (mn > 200) & (b - r >= 0)
+    strict = (mn > smin) & (b - r >= shue)
+    loose = (mn > lmin) & (b - r >= lhue)
     return strict, loose
 
 
@@ -160,21 +202,36 @@ def crop_34(im, box, width):
     return im.resize((width, round(width * 4 / 3)), Image.LANCZOS)
 
 
-def matte(a, kind, smooth):
+def matte(a, job):
     """Kembalikan alpha 0..255 untuk siluet subjek."""
-    if kind == "red":
+    if job["bg"] == "red":
         bg = border_connected(mask_red(a))
     else:
-        strict, loose = mask_white(a)
+        strict, loose = mask_white(a, job.get("white_th", (210, 5, 200, 0)))
+
+        # Kotak sapuan: di dalamnya, apa pun yang tidak gelap dan tidak hangat
+        # dianggap latar. Dipakai untuk satu-dua bercak latar yang warnanya
+        # kebetulan jatuh di luar ambang — sama seperti kotak pangkas di atas,
+        # angkanya diukur manual pada resolusi kerja (`width` x 4/3 width).
+        wipe = job.get("wipe", [])
+        if wipe:
+            free = (a.min(axis=2) > 85) & (a[..., 0] - a[..., 2] < 25)
+            for x0, y0, x1, y1 in wipe:
+                strict[y0:y1, x0:x1] |= free[y0:y1, x0:x1]
+                loose[y0:y1, x0:x1] |= free[y0:y1, x0:x1]
+
         bg = border_connected(strict)
-        # Rambatan longgar dibatasi dua piksel dari hasil ketat. Tanpa batas
-        # jarak, sorot cahaya di hijab lolos ambang longgar dan ikut terhapus.
-        for _ in range(2):
+        # Rambatan longgar dibatasi jarak dari hasil ketat. Tanpa batas itu,
+        # sorot cahaya di hijab lolos ambang longgar dan ikut terhapus — dan
+        # pada foto berlatar ruangan, rambatannya menembus wajah lewat piksel
+        # tepi yang nyaris netral lalu menghabiskan seluruh kepala.
+        for _ in range(job.get("grow", 2)):
             bg = dilate(bg) & loose
 
     bg = ~keep_main(~bg)
     alpha = Image.fromarray(((~bg) * 255).astype(np.uint8), "L")
 
+    smooth = job["smooth"]
     if smooth:
         # Sorot cahaya di mahkota hijab nyaris seterang latarnya, jadi batasnya
         # di sana penuh gerigi. Blur lalu ambang-ulang membuang tonjolan yang
@@ -192,7 +249,7 @@ def matte(a, kind, smooth):
     return np.clip((np.asarray(alpha).astype(np.float32) - 92) * 1.9, 0, 255)
 
 
-def normalize(cut):
+def normalize(cut, zoom=1.0):
     """Paskan siluet ke kanvas seragam, berpatokan pada kepala."""
     cut = cut.crop(cut.getchannel("A").getbbox())
 
@@ -205,20 +262,23 @@ def normalize(cut):
     head_w = cols[-1] - cols[0] + 1
     head_cx = (cols[-1] + cols[0]) / 2
 
-    scale = HEAD_W / head_w
+    scale = HEAD_W * zoom / head_w
     cut = cut.resize(
         (max(1, round(cut.width * scale)), max(1, round(cut.height * scale))),
         Image.LANCZOS,
     )
 
+    y = HEAD_TOP - round(top * scale)
+    # Kartu memasang foto dengan object-bottom, jadi sisa ruang di kaki kanvas
+    # akan terbaca sebagai siluet yang melayang. Untuk yang diperkecil, badannya
+    # digeser turun sampai menyentuh dasar; kepala ikut turun, dan justru itu
+    # yang membuatnya terbaca sebagai bingkai yang lebih lebar, bukan foto kecil.
+    y += max(0, CANVAS_H - (y + cut.height))
+
     # paste, bukan alpha_composite: hanya paste yang menerima koordinat negatif,
     # dan siluet memang boleh terpotong tepi kanvas.
     canvas = Image.new("RGBA", (CANVAS_W, CANVAS_H), (0, 0, 0, 0))
-    canvas.paste(
-        cut,
-        (round(CANVAS_W / 2 - head_cx * scale), HEAD_TOP - round(top * scale)),
-        cut,
-    )
+    canvas.paste(cut, (round(CANVAS_W / 2 - head_cx * scale), y), cut)
     return canvas
 
 
@@ -231,9 +291,13 @@ def main():
             print(f"lewat: {job['src']} tidak ada di {SRC}")
             continue
 
-        im = crop_34(Image.open(path).convert("RGB"), job["crop"], job["width"])
-        a = np.asarray(im).astype(np.int16)
-        av = matte(a, job["bg"], job["smooth"])
+        im = crop_34(Image.open(path).convert("RGBA"), job["crop"], job["width"])
+        a = np.asarray(im).astype(np.int16)[..., :3]
+
+        if job["bg"] == "alpha":
+            av = np.asarray(im.getchannel("A")).astype(np.float32)
+        else:
+            av = matte(a, job)
 
         rgb = a.astype(np.float32)
         if job["bg"] == "red":
@@ -245,7 +309,7 @@ def main():
 
         cut = Image.fromarray(np.dstack([np.clip(rgb, 0, 255), av]).astype(np.uint8), "RGBA")
         out = os.path.join(OUT, job["slug"] + ".webp")
-        normalize(cut).save(out, "WEBP", quality=90, method=6)
+        normalize(cut, job.get("zoom", 1.0)).save(out, "WEBP", quality=90, method=6)
         print(f"{job['slug']:26s} -> public/team/{job['slug']}.webp  {os.path.getsize(out)//1024} KB")
 
 

@@ -345,6 +345,19 @@
   }
 }
 
+/* Garis penghubung yang menggambar dirinya sendiri. Panjang lintasannya
+   dilebihkan lewat --len; angka yang kebesaran cuma menunda awal goresan,
+   sedangkan yang kekecilan menyisakan potongan garis yang sudah tampak sejak
+   awal — jadi lebihkan, jangan pas-pasan. */
+@keyframes draw {
+  from {
+    stroke-dashoffset: var(--len, 200);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 /* Ayunan vertikal untuk kartu profil dan hiasan sekitarnya. Amplitudonya
    sengaja kecil — gerak yang cukup terasa hidup tapi tidak mengganggu baca. */
 @keyframes bob {
@@ -398,6 +411,10 @@
 .anim-bob-orb {
   animation: bobOrb 16s ease-in-out infinite;
 }
+.anim-draw {
+  stroke-dasharray: var(--len, 200);
+  animation: draw 1.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
 .anim-sweep::after {
   content: "";
   position: absolute;
@@ -428,6 +445,7 @@
 @media (prefers-reduced-motion: reduce) {
   .aurora::before,
   .aurora::after,
+  .anim-draw,
   .anim-bob,
   .anim-bob-orb {
     animation: none;

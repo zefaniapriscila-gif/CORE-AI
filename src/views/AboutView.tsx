@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Plus, Quote } from 'lucide-react';
+import { ArrowLeft, GraduationCap, Plus, Quote } from 'lucide-react';
 import { SiteView } from '../engine/siteTypes';
 import { Chip } from '../components/ui/primitives';
 
@@ -53,6 +53,20 @@ const TEAM: Member[] = [
     tint2: 'var(--color-mode-comparison)',
   },
 ];
+
+/**
+ * Pembimbing. Dipisah dari TEAM, bukan dijadikan anggota keempat: perannya
+ * berbeda, dan menaruhnya sebagai kartu keempat akan memecah barisan tiga.
+ */
+const MENTOR = {
+  slug: 'satriyo-priyo-adi',
+  name: 'Satriyo Priyo Adi, S.Psi., M.Sc.',
+  kampus: 'Universitas Gadjah Mada',
+  /* TODO: kalimat pendampingan di bawah masih isian sementara — ganti dengan
+     keterangan sebenarnya. Nama, gelar, dan foto sudah sesuai sampul esai. */
+  ringkas:
+    'Mendampingi arah kajian dan menjaga tiap klaim dalam esai tetap berpijak pada bukti.',
+};
 
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' &&
@@ -342,6 +356,167 @@ const MemberCard: React.FC<{
 /* -------------------------------------------------------------------------- */
 
 /**
+ * Tiga garis dari kaki tiap kartu yang menyatu ke satu titik di kartu
+ * pembimbing — silsilah, bukan hiasan: warnanya diambil dari tint tiap anggota
+ * sehingga jelas garis mana milik siapa.
+ *
+ * `preserveAspectRatio="none"` membuat kotaknya ikut melar mengikuti lebar
+ * kolom, jadi ujung atas tiap garis tetap jatuh di tengah kartunya berapa pun
+ * lebar layar. Konsekuensinya goresan ikut melar juga, dan itu ditolak lewat
+ * `vector-effect` supaya tebalnya tetap satu piksel.
+ */
+const Lineage: React.FC = () => (
+  <div className="hidden md:block" aria-hidden="true">
+    <svg
+      viewBox="0 0 900 96"
+      preserveAspectRatio="none"
+      className="w-full h-[74px] overflow-visible"
+    >
+      {TEAM.map((m, i) => {
+        const x = 150 + i * 300;
+        return (
+          <path
+            key={m.slug}
+            d={`M${x} 0 C${x} 58, 450 40, 450 96`}
+            fill="none"
+            stroke={m.tint}
+            strokeWidth={1.25}
+            strokeOpacity={0.42}
+            strokeLinecap="round"
+            vectorEffect="non-scaling-stroke"
+            className="anim-draw"
+            style={
+              {
+                '--len': 340,
+                animationDelay: `${0.3 + i * 0.12}s`,
+              } as React.CSSProperties
+            }
+          />
+        );
+      })}
+    </svg>
+  </div>
+);
+
+/**
+ * Kartu pembimbing. Bentuknya sengaja melintang, kebalikan dari tiga kartu
+ * tegak di atasnya — satu baris yang menampung ketiganya, bukan kartu keempat
+ * yang sejajar. Cahaya di balik kacanya campuran tiga tint anggota, jadi
+ * hubungannya terbaca dari warna saja tanpa perlu ditulis.
+ */
+const MentorCard: React.FC = () => (
+  <div
+    className="group relative rounded-[28px] overflow-hidden glass p-3.5 md:p-4
+      transition-[translate,box-shadow] duration-[520ms] ease-[cubic-bezier(.16,1,.3,1)]
+      hover:-translate-y-1 hover:shadow-[0_30px_60px_-26px_rgba(16,24,60,.3)]"
+    style={
+      {
+        '--tint': TEAM[0].tint,
+        '--tint2': TEAM[2].tint,
+      } as React.CSSProperties
+    }
+  >
+    <div className="aurora opacity-50" />
+
+    {/* Sapuan tint anggota tengah — dua lainnya sudah dibawa .aurora */}
+    <div
+      className="absolute inset-0 pointer-events-none opacity-[.13]"
+      style={{
+        background: `radial-gradient(70% 120% at 50% 0%, ${TEAM[1].tint}, transparent 70%)`,
+      }}
+    />
+
+    {/* Bertumpuk di layar sempit. Bersisian di lebar 320px menyisakan kolom
+        teks ~150px: namanya patah tiga baris dan chip-nya berjatuhan. */}
+    <div className="relative z-10 flex flex-col items-start gap-3.5 md:flex-row md:items-center md:gap-6">
+      {/* Potret, dibingkai sama seperti kartu anggota supaya satu keluarga */}
+      <div
+        className="relative shrink-0 w-[120px] md:w-[132px] aspect-[4/5] rounded-[20px] overflow-hidden
+          shadow-[inset_0_0_0_1px_rgba(16,24,60,.07)]"
+        style={{
+          background:
+            'linear-gradient(165deg, color-mix(in srgb, var(--tint) 15%, white), color-mix(in srgb, var(--tint2) 9%, white) 55%, white)',
+        }}
+      >
+        <div
+          className="absolute inset-x-0 top-[6%] h-[62%] pointer-events-none
+            transition-opacity duration-500 opacity-70 group-hover:opacity-100"
+          style={{
+            background:
+              'radial-gradient(closest-side, color-mix(in srgb, var(--tint) 32%, transparent), transparent)',
+          }}
+        />
+        <img
+          src={`/team/${MENTOR.slug}.webp`}
+          alt={MENTOR.name}
+          width={640}
+          height={800}
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          className="relative w-full h-full object-contain object-bottom select-none
+            origin-bottom transition-transform duration-[1100ms] ease-[cubic-bezier(.16,1,.3,1)]
+            group-hover:scale-[1.04]"
+        />
+      </div>
+
+      {/* Keterangan */}
+      <div className="min-w-0">
+        <span
+          className="inline-flex items-center gap-1.5 h-[26px] px-2.5 rounded-full text-[11px] font-medium
+            tracking-wide backdrop-blur-md"
+          style={{
+            color: 'var(--color-core-600)',
+            background: 'color-mix(in srgb, var(--color-core-500) 11%, transparent)',
+            boxShadow: 'inset 0 0 0 1px color-mix(in srgb, var(--color-core-500) 24%, transparent)',
+          }}
+        >
+          <GraduationCap className="w-3.5 h-3.5" />
+          Dosen Pembimbing
+        </span>
+
+        <h3 className="mt-2.5 font-display text-[18px] md:text-[21px] font-bold -tracking-[.02em] text-hi leading-tight">
+          {MENTOR.name}
+        </h3>
+
+        <p className="mt-1 font-mono text-[11px] tracking-wide text-lo">
+          {MENTOR.kampus}
+        </p>
+
+        <p className="mt-2.5 text-[13px] md:text-[13.5px] leading-[1.65] text-mid max-w-[46ch]">
+          {MENTOR.ringkas}
+        </p>
+
+        {/* Nama ketiganya, memakai warna kartu masing-masing — pasangan dari
+            garis silsilah di atas, dan satu-satunya penanda arah bimbingan
+            yang tetap terbaca saat garis itu disembunyikan di layar sempit. */}
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          <span className="text-[11.5px] text-lo mr-0.5">Membimbing</span>
+          {TEAM.map((m) => (
+            <Chip key={m.slug} tone={m.tint}>
+              {m.name.split(' ')[0]}
+            </Chip>
+          ))}
+        </div>
+      </div>
+
+      {/* Sisi kanan — naskah yang dibimbing. Baru muncul di layar lebar; di
+          bawah itu ruangnya habis dipakai potret dan nama, dan menyempitkan
+          keduanya demi keterangan ini jelas rugi. */}
+      <div className="hidden lg:block ml-auto pl-6 self-stretch border-l border-black/[.08] shrink-0 max-w-[210px]">
+        <p className="font-mono text-[10.5px] tracking-wide text-lo">Naskah</p>
+        <p className="mt-1.5 text-[12.5px] leading-[1.55] text-mid">
+          CORE AI — structured prompting sebagai penahan cognitive offloading.
+        </p>
+        <p className="mt-2 text-[11.5px] text-lo">Lomba Esai Ilmiah PSYFIC 2026</p>
+      </div>
+    </div>
+  </div>
+);
+
+/* -------------------------------------------------------------------------- */
+
+/**
  * Halaman Tentang Kami — tiga kartu profil di atas panggung yang sama dengan
  * halaman muka. Berbeda dari halaman lain, isinya boleh menggulir ke dalam
  * supaya kartu tidak terpotong di layar pendek.
@@ -352,10 +527,17 @@ export const AboutView: React.FC<Props> = ({ onNavigate }) => {
   return (
     <main className="relative z-10 flex-1 min-h-0 flex flex-col">
       {/* Bola cahaya latar, mengambang pelan di belakang kartu. Diletakkan di
-          luar area gulir supaya tidak ikut bergeser saat halaman digulir. */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          luar area gulir supaya tidak ikut bergeser saat halaman digulir.
+
+          Kotak pemotongnya dinaikkan melewati kepala halaman. Bola atas melar
+          jauh ke atas dan blurnya masih pekat di ketinggian itu, jadi memotong
+          tepat di bawah header menampakkan garis mendatar yang tegas — bukan
+          gradien yang memudar, melainkan potongan penampang. Dinaikkan 96px,
+          potongannya jatuh di luar layar dan yang tersisa hanya peralihan
+          halus. Tetap dipotong, supaya bola bawah tidak melebarkan halaman. */}
+      <div className="absolute -top-24 inset-x-0 bottom-0 pointer-events-none overflow-hidden">
         <div
-          className="absolute -top-24 left-[6%] w-[340px] h-[340px] rounded-full anim-bob-orb"
+          className="absolute top-0 left-[6%] w-[340px] h-[340px] rounded-full anim-bob-orb"
           style={{
             background: 'var(--color-core-500)',
             opacity: 0.1,
@@ -416,6 +598,19 @@ export const AboutView: React.FC<Props> = ({ onNavigate }) => {
               />
             </div>
           ))}
+        </div>
+
+        {/* ---- Pembimbing ---- */}
+        <div className="mt-8 md:mt-3">
+          <Lineage />
+
+          {/* Pengganti garis silsilah di layar sempit: kartunya bertumpuk satu
+              kolom, jadi tiga garis yang menyatu tidak punya arti apa-apa. */}
+          <div className="md:hidden mx-auto w-px h-8 bg-gradient-to-b from-transparent to-black/[.14]" />
+
+          <div className="anim-rise delay-4 max-w-[320px] md:max-w-none mx-auto">
+            <MentorCard />
+          </div>
         </div>
 
         {/* ---- Kaki ---- */}
