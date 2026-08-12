@@ -37,11 +37,7 @@ export const ExtensionPopup: React.FC<Props> = ({ onSelect, selected }) => (
             v0.9 · gemini.google.com
           </div>
         </div>
-        <span className="ml-auto inline-flex items-center gap-1.5 text-[11.5px] font-medium text-mid">
-          <span
-            className="w-1.5 h-1.5 rounded-full bg-mode-reflective"
-            style={{ boxShadow: '0 0 8px var(--color-mode-reflective)' }}
-          />
+        <span className="ml-auto inline-flex items-center text-[11.5px] font-medium text-mid">
           Aktif
         </span>
       </div>

@@ -1,6 +1,5 @@
 import React from 'react';
 import { PanelBody } from '../CorePanel';
-import { Pulse } from '../../ui/primitives';
 
 interface Props {
   eyebrow: string;
@@ -17,8 +16,7 @@ interface Props {
  */
 export const LoadingStep: React.FC<Props> = ({ eyebrow, tone, title, lede }) => (
   <PanelBody eyebrow={eyebrow} tone={tone} title={title} lede={lede}>
-    <div className="flex items-center gap-2 pt-1">
-      <Pulse tone={tone} />
+    <div className="flex items-center pt-1">
       <span className="font-mono text-[10.5px]" style={{ color: tone }}>
         gemini-2.5-flash menyusun respons…
       </span>

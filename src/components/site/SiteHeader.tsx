@@ -15,18 +15,16 @@ const MENU: { id: SiteView; label: string }[] = [
 ];
 
 /**
- * Logo institusi — placeholder sampai berkas aslinya masuk.
- * Sengaja bergaris putus-putus supaya jelas ini belum final.
+ * Logo institusi. Berkasnya raster 192px di public/logo — sumbernya memang
+ * bitmap, bukan vektor, jadi tidak ada gunanya disimpan sebagai SVG.
  */
-const LogoSlot: React.FC<{ label: string }> = ({ label }) => (
-  <div
-    title={`Placeholder logo — ${label}`}
-    className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center
-      border border-dashed border-ink-600 bg-white/70 text-[8px] font-mono
-      tracking-wider text-lo select-none"
-  >
-    LOGO
-  </div>
+const Logo: React.FC<{ slug: string; label: string }> = ({ slug, label }) => (
+  <img
+    src={`/logo/${slug}.webp`}
+    alt={label}
+    className="w-10 h-10 shrink-0 object-contain select-none"
+    draggable={false}
+  />
 );
 
 export const SiteHeader: React.FC<Props> = ({ view, onNavigate }) => {
@@ -52,10 +50,10 @@ export const SiteHeader: React.FC<Props> = ({ view, onNavigate }) => {
 
   return (
     <header className="relative z-30 shrink-0 h-[76px] px-6 md:px-9 flex items-center">
-      {/* Kiri — dua slot logo institusi */}
+      {/* Kiri — logo institusi dan penyelenggara */}
       <div className="flex items-center gap-2.5">
-        <LogoSlot label="institusi 1" />
-        <LogoSlot label="institusi 2" />
+        <Logo slug="ugm" label="Universitas Gadjah Mada" />
+        <Logo slug="psyfic" label="Psychology Scientific Event (PSYFIC)" />
       </div>
 
       {/* Tengah — wordmark */}
