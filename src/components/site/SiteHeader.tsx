@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Menu, X, Check } from 'lucide-react';
 import { SiteView } from '../../engine/siteTypes';
+import { SoundToggle } from '../ui/SoundToggle';
 
 interface Props {
   view: SiteView;
@@ -18,13 +19,26 @@ const MENU: { id: SiteView; label: string }[] = [
  * Logo institusi. Berkasnya raster 192px di public/logo — sumbernya memang
  * bitmap, bukan vektor, jadi tidak ada gunanya disimpan sebagai SVG.
  */
-const Logo: React.FC<{ slug: string; label: string }> = ({ slug, label }) => (
-  <img
-    src={`/logo/${slug}.webp`}
-    alt={label}
-    className="w-10 h-10 shrink-0 object-contain select-none"
-    draggable={false}
-  />
+const Logo: React.FC<{ slug: string; label: string; href: string }> = ({
+  slug,
+  label,
+  href,
+}) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    title={label}
+    aria-label={label}
+    className="inline-flex items-center justify-center p-1 rounded-xl transition-all duration-200 hover:bg-black/[.06] hover:scale-105 active:scale-95 cursor-pointer"
+  >
+    <img
+      src={`/logo/${slug}.webp`}
+      alt={label}
+      className="w-9 h-9 shrink-0 object-contain select-none"
+      draggable={false}
+    />
+  </a>
 );
 
 export const SiteHeader: React.FC<Props> = ({ view, onNavigate }) => {
@@ -51,9 +65,17 @@ export const SiteHeader: React.FC<Props> = ({ view, onNavigate }) => {
   return (
     <header className="relative z-30 shrink-0 h-[76px] px-6 md:px-9 flex items-center">
       {/* Kiri — logo institusi dan penyelenggara */}
-      <div className="flex items-center gap-2.5">
-        <Logo slug="ugm" label="Universitas Gadjah Mada" />
-        <Logo slug="psyfic" label="Psychology Scientific Event (PSYFIC)" />
+      <div className="flex items-center gap-1.5">
+        <Logo
+          slug="ugm"
+          label="Universitas Gadjah Mada"
+          href="https://ugm.ac.id/id/"
+        />
+        <Logo
+          slug="psyfic"
+          label="Psychology Scientific Event (PSYFIC)"
+          href="https://www.instagram.com/psyfic_unhas/"
+        />
       </div>
 
       {/* Tengah — wordmark */}
@@ -65,8 +87,10 @@ export const SiteHeader: React.FC<Props> = ({ view, onNavigate }) => {
         CORE AI
       </button>
 
-      {/* Kanan — menu */}
-      <div ref={wrapRef} className="ml-auto relative">
+      {/* Kanan — sound toggle & menu */}
+      <div ref={wrapRef} className="ml-auto flex items-center gap-1 relative">
+        <SoundToggle />
+
         <button
           onClick={() => setOpen((v) => !v)}
           aria-label="Menu"

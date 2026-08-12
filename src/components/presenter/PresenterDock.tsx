@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { CoreMark } from '../brand/CoreMark';
 import { MODE_COLOR, Stage, STEPS } from '../../engine/coeTypes';
+import { SoundToggle } from '../ui/SoundToggle';
 
 interface Props {
   stage: Stage;
@@ -142,6 +143,7 @@ export const PresenterDock: React.FC<Props> = ({
           >
             <RotateCcw className="w-4 h-4" />
           </button>
+          <SoundToggle />
         </div>
 
         {/* Teori */}
