@@ -31,7 +31,7 @@ import {
   REFLECTIVE_SAMPLE_SUMMARY,
   SOCRATIC_SAMPLE_ANSWER,
 } from './engine/coeScript';
-import { countWords } from './engine/dualLayerValidator';
+import { countWords, estimateTokens } from './engine/dualLayerValidator';
 import { useCoe } from './engine/useCoe';
 
 /** Tahapan yang menampilkan side panel. Sebelum ini, hanya popup toolbar. */
@@ -255,7 +255,9 @@ export default function App() {
 
   /** Baris terakhir konsol menyatakan apakah tahap ini live atau naskah. */
   const consoleLines = useMemo(() => {
-    const base = CONSOLE_LINES[stage] ?? [];
+    const base = (CONSOLE_LINES[stage] ?? []).map((line) =>
+      line.replace('{tokens}', String(estimateTokens(content.answer))),
+    );
     const task = STAGE_TASK[stage as keyof typeof STAGE_TASK];
     if (!task) return base;
 
@@ -267,7 +269,7 @@ export default function App() {
         ? 'gemini-2.5-flash · respons live'
         : 'jalur live gagal · memakai naskah cadangan',
     ];
-  }, [stage, source]);
+  }, [stage, source, content.answer]);
 
   /* --- Isi panel per tahap --------------------------------------------- */
 

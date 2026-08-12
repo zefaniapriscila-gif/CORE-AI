@@ -2,6 +2,7 @@ import React from 'react';
 import { Eye, Radio } from 'lucide-react';
 import { PanelBody } from '../CorePanel';
 import { SectionLabel } from '../../ui/primitives';
+import { estimateTokens } from '../../../engine/dualLayerValidator';
 
 /** Sebelum tujuan dipilih — ekstensi terpasang tapi belum berwenang. */
 export const IdleStep: React.FC = () => (
@@ -35,7 +36,10 @@ interface NormalProps {
 }
 
 /** Normal Mode — Gemini menjawab bebas, interceptor hanya merekam. */
-export const NormalStep: React.FC<NormalProps> = ({ extracted, tokens = 148 }) => (
+export const NormalStep: React.FC<NormalProps> = ({
+  extracted,
+  tokens = estimateTokens(extracted),
+}) => (
   <PanelBody
     eyebrow="Normal Mode · tanpa intervensi"
     title={<>Ia menjawab. Kami hanya mencatat.</>}

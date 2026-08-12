@@ -3,7 +3,9 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 import type { IncomingMessage, ServerResponse } from 'http';
-import { handleCoe } from './api/_coe';
+
+/** Tipe modul handler. Posisi tipe saja — tidak ada impor nyata di sini. */
+type CoeModule = typeof import('./api/_coe');
 
 /**
  * Menyediakan /api/gemini saat `npm run dev`.
@@ -11,6 +13,12 @@ import { handleCoe } from './api/_coe';
  * Fungsi di folder api/ hanya hidup di Vercel, jadi tanpa ini pengembangan
  * lokal harus lewat `vercel dev`. Middleware ini memanggil handler yang persis
  * sama, sehingga jalur dev dan jalur produksi tidak pernah menyimpang.
+ *
+ * Handler-nya dimuat lewat ssrLoadModule, bukan impor statis. Impor statis akan
+ * menjadikan api/_coe.ts sebagai dependensi berkas konfigurasi, sehingga tiap
+ * penyuntingan prompt merestart seluruh dev server dan membuang state demo yang
+ * sedang berjalan. Dengan ssrLoadModule, perubahan cukup terbaca di permintaan
+ * berikutnya.
  */
 function coeDevApi(apiKey: string | undefined): Plugin {
   return {
@@ -41,6 +49,10 @@ function coeDevApi(apiKey: string | undefined): Plugin {
             }
 
             const ip = req.socket.remoteAddress ?? 'dev';
+            const { handleCoe } = (await server.ssrLoadModule(
+              '/api/_coe.ts',
+            )) as CoeModule;
+
             const result = await handleCoe(body, apiKey, ip);
             res.statusCode = result.status;
             res.end(JSON.stringify(result.body));
