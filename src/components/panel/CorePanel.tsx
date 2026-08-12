@@ -8,7 +8,6 @@ import {
   SUBMODULE_LABEL,
   SubModule,
 } from '../../engine/coeTypes';
-import { Pulse } from '../ui/primitives';
 
 interface Props {
   mode: ModeKey | null;
@@ -78,8 +77,7 @@ export const CorePanel: React.FC<Props> = ({
 
         {/* ---- Telemetri COE ---- */}
         <footer className="shrink-0 hairline-t">
-          <div className="flex items-center gap-2 px-5 h-9">
-            <Pulse tone={module === 'idle' ? 'var(--color-lo)' : tone} />
+          <div className="flex items-center px-5 h-9">
             <span className="text-[11.5px] font-medium text-mid truncate">
               {SUBMODULE_LABEL[module]}
             </span>
@@ -126,13 +124,9 @@ export const PanelBody: React.FC<{
     <div className="px-5 pt-4 pb-3 space-y-3 flex-1">
       {eyebrow && (
         <span
-          className="inline-flex items-center gap-1.5 h-[25px] px-2.5 rounded-full text-[11px] font-medium backdrop-blur-md glass-tint anim-rise"
+          className="inline-flex items-center h-[25px] px-2.5 rounded-full text-[11px] font-medium backdrop-blur-md glass-tint anim-rise"
           style={{ ['--tint' as string]: tone, color: tone }}
         >
-          <span
-            className="w-1.5 h-1.5 rounded-full"
-            style={{ background: tone, boxShadow: `0 0 8px ${tone}` }}
-          />
           {eyebrow}
         </span>
       )}

@@ -93,22 +93,6 @@ export const Chip: React.FC<{
   </span>
 );
 
-/** Titik status berdenyut dengan halo lembut. */
-export const Pulse: React.FC<{ tone?: string; size?: number }> = ({
-  tone = 'var(--color-core-500)',
-  size = 6,
-}) => (
-  <span
-    className="rounded-full anim-blink shrink-0"
-    style={{
-      width: size,
-      height: size,
-      background: tone,
-      boxShadow: `0 0 10px ${tone}`,
-    }}
-  />
-);
-
 /** Meteran tipis untuk metrik validasi. */
 export const Meter: React.FC<{
   value: number;

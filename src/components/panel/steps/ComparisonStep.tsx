@@ -104,11 +104,7 @@ export const ComparisonStep: React.FC<Props> = ({
 
     {/* Intisari */}
     <div className="rounded-2xl glass-soft px-4 py-4">
-      <div className="flex items-center gap-2 mb-2">
-        <span
-          className="w-1 h-1 rounded-full"
-          style={{ background: TONE, boxShadow: `0 0 8px ${TONE}` }}
-        />
+      <div className="flex items-center mb-2">
         <span className="text-[11.5px] font-medium text-lo">Intisari</span>
       </div>
       <p className="font-display text-[15.5px] font-medium leading-[1.5] -tracking-[.01em] text-hi">

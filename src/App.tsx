@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { DotField } from './components/site/DotField';
 import { SiteHeader } from './components/site/SiteHeader';
+import { AboutView } from './views/AboutView';
 import { LandingView } from './views/LandingView';
 import { PlaceholderView } from './views/PlaceholderView';
 import { SimulationView } from './views/SimulationView';
@@ -36,9 +37,7 @@ export default function App() {
       {view === 'metodologi' && (
         <PlaceholderView title="Metodologi" onNavigate={setView} />
       )}
-      {view === 'tentang' && (
-        <PlaceholderView title="Tentang Kami" onNavigate={setView} />
-      )}
+      {view === 'tentang' && <AboutView onNavigate={setView} />}
     </div>
   );
 }
