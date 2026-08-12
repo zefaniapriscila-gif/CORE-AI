@@ -2,21 +2,22 @@
 @import "tailwindcss";
 
 /* ==========================================================================
-   CORE AI — sistem desain
+   CORE AI — sistem desain (tema terang)
    Dua permukaan yang sengaja dibenturkan:
-   · paper = halaman Gemini (terang, datar, cepat)
-   · glass = ekstensi CORE AI (kaca gelap berlapis di atas cahaya aurora)
+   · paper = halaman Gemini (putih, datar, cepat)
+   · glass = ekstensi CORE AI (kaca putih berembun di atas cahaya aurora)
    ========================================================================== */
 
 @theme {
-  /* Dasar dingin. Nama token dipertahankan, nilainya yang berubah. */
-  --color-ink-950: #06070c;
-  --color-ink-900: #0a0c14;
-  --color-ink-850: #0f1220;
-  --color-ink-800: #141828;
-  --color-ink-700: #1c2133;
-  --color-ink-600: #2a3145;
-  --color-ink-500: #3d465f;
+  /* Dasar terang. Nama token dipertahankan — skalanya yang dibalik,
+     supaya seluruh komponen lama ikut terang tanpa disentuh satu-satu. */
+  --color-ink-950: #ffffff;
+  --color-ink-900: #f3f6fd;
+  --color-ink-850: #edf1fa;
+  --color-ink-800: #e4eaf6;
+  --color-ink-700: #d7dfef;
+  --color-ink-600: #bcc6dd;
+  --color-ink-500: #98a3bd;
 
   /* Permukaan Gemini */
   --color-paper-50: #ffffff;
@@ -26,22 +27,26 @@
   --color-paper-ink: #1c1b1a;
   --color-paper-mid: #5f6368;
 
-  /* Teks di atas kaca */
-  --color-hi: #eef1f8;
-  --color-mid: #99a2ba;
-  --color-lo: #6a7490;
+  /* Teks di atas kaca terang */
+  --color-hi: #10162c;
+  --color-mid: #4c5670;
+  --color-lo: #69738f;
 
-  /* Brand — periwinkle, bukan oranye */
-  --color-core-400: #9ba6ff;
-  --color-core-500: #7b8cff;
-  --color-core-600: #5b6ae6;
+  /* Brand — biru indigo, dipekatkan agar terbaca di atas putih */
+  --color-core-400: #4d5fe0;
+  --color-core-500: #2f4bdc;
+  --color-core-600: #1e34ab;
 
-  /* Hue per mode kognitif — jadi warna aurora di balik kaca */
-  --color-mode-intercept: #ff5c7a;
-  --color-mode-socratic: #9d8bff;
-  --color-mode-reflective: #3fdcc8;
-  --color-mode-comparison: #4cc2ff;
-  --color-mode-scaffold: #a8e063;
+  /* Hue per mode kognitif — jadi warna aurora di balik kaca.
+     Nilainya diturunkan luminansinya supaya kontras di tema terang. */
+  --color-mode-intercept: #cf2f47;
+  --color-mode-socratic: #6a4ce8;
+  --color-mode-reflective: #0a7f6f;
+  --color-mode-comparison: #0b79cf;
+  --color-mode-scaffold: #3a7a1a;
+
+  /* Latar panggung */
+  --color-stage: #f7f9fd;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Manrope", "Inter", ui-sans-serif, sans-serif;
@@ -58,7 +63,7 @@
   body {
     font-family: var(--font-sans);
     font-feature-settings: "cv11", "ss01";
-    background: #06070c;
+    background: var(--color-stage);
     color: var(--color-hi);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -66,8 +71,8 @@
   }
 
   ::selection {
-    background: color-mix(in srgb, var(--color-core-500) 45%, transparent);
-    color: #fff;
+    background: color-mix(in srgb, var(--color-core-500) 22%, transparent);
+    color: var(--color-hi);
   }
 }
 
@@ -76,68 +81,68 @@
    -------------------------------------------------------------------------- */
 
 /* Pelat utama — panel, popup, dock, sheet.
-   Dua lapis: kilau di tepi atas, lalu scrim gelap supaya aurora di baliknya
-   jadi cahaya, bukan bidang warna. */
+   Putih berembun, sedikit tembus supaya aurora di baliknya terbaca sebagai
+   semburat warna, bukan bidang datar. */
 .glass {
   background:
     linear-gradient(
       170deg,
-      rgba(255, 255, 255, 0.08),
-      rgba(255, 255, 255, 0.022) 55%
+      rgba(255, 255, 255, 0.9),
+      rgba(255, 255, 255, 0.7) 55%
     ),
-    linear-gradient(180deg, rgba(7, 8, 14, 0.52), rgba(6, 7, 12, 0.72));
-  backdrop-filter: blur(30px) saturate(165%);
-  -webkit-backdrop-filter: blur(30px) saturate(165%);
+    linear-gradient(180deg, rgba(247, 249, 253, 0.72), rgba(242, 246, 252, 0.8));
+  backdrop-filter: blur(26px) saturate(150%);
+  -webkit-backdrop-filter: blur(26px) saturate(150%);
   box-shadow:
-    0 20px 60px -12px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.13),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+    0 18px 46px -18px rgba(16, 24, 60, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 0 0 1px rgba(16, 24, 60, 0.08);
 }
 
-/* Pelat lebar dan pendek (lembar teori) butuh scrim lebih tebal, karena
+/* Pelat lebar dan pendek (lembar teori) butuh lapis lebih pekat, karena
    blob aurora menutupi porsi permukaan yang jauh lebih besar. */
 .glass-deep {
   background:
     linear-gradient(
       170deg,
-      rgba(255, 255, 255, 0.075),
-      rgba(255, 255, 255, 0.02) 55%
+      rgba(255, 255, 255, 0.96),
+      rgba(255, 255, 255, 0.86) 55%
     ),
-    linear-gradient(180deg, rgba(7, 8, 14, 0.78), rgba(6, 7, 12, 0.88));
-  backdrop-filter: blur(34px) saturate(160%);
-  -webkit-backdrop-filter: blur(34px) saturate(160%);
+    linear-gradient(180deg, rgba(246, 249, 253, 0.9), rgba(240, 245, 252, 0.94));
+  backdrop-filter: blur(30px) saturate(145%);
+  -webkit-backdrop-filter: blur(30px) saturate(145%);
   box-shadow:
-    0 26px 70px -14px rgba(0, 0, 0, 0.7),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+    0 26px 64px -20px rgba(16, 24, 60, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 0 0 1px rgba(16, 24, 60, 0.08);
 }
 
-/* Lapis kedua di dalam pelat — lebih tipis supaya hierarki tetap terbaca. */
+/* Lapis kedua di dalam pelat — sedikit lebih gelap dari pelatnya. */
 .glass-soft {
-  background: rgba(255, 255, 255, 0.045);
+  background: rgba(16, 24, 60, 0.035);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.055);
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 0 0 1px rgba(16, 24, 60, 0.075);
 }
 
 /* Kaca bertinta warna mode. --tint diisi dari komponen. */
 .glass-tint {
   background: linear-gradient(
     170deg,
-    color-mix(in srgb, var(--tint) 16%, transparent),
+    color-mix(in srgb, var(--tint) 13%, transparent),
     color-mix(in srgb, var(--tint) 6%, transparent)
   );
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    inset 0 0 0 1px color-mix(in srgb, var(--tint) 26%, transparent);
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 0 0 1px color-mix(in srgb, var(--tint) 30%, transparent);
 }
 
 /* Garis pemisah setipis mungkin. */
 .hairline {
-  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 -1px 0 rgba(16, 24, 60, 0.09);
 }
 .hairline-t {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 1px 0 rgba(16, 24, 60, 0.09);
 }
 
 /* --------------------------------------------------------------------------
@@ -165,8 +170,8 @@
   height: 300px;
   top: -130px;
   right: -110px;
-  opacity: 0.34;
-  background: var(--tint, #7b8cff);
+  opacity: 0.55;
+  background: var(--tint, #2f4bdc);
   animation: drift 18s ease-in-out infinite;
 }
 
@@ -175,8 +180,8 @@
   height: 260px;
   bottom: -140px;
   left: -100px;
-  opacity: 0.22;
-  background: var(--tint2, #4cc2ff);
+  opacity: 0.38;
+  background: var(--tint2, #0b79cf);
   animation: drift 22s ease-in-out infinite reverse;
 }
 
@@ -215,10 +220,10 @@
   border-radius: 14px;
   background: repeating-linear-gradient(
     -45deg,
-    rgba(255, 92, 122, 0.045) 0 7px,
+    rgba(220, 59, 82, 0.07) 0 7px,
     transparent 7px 14px
   );
-  box-shadow: inset 0 0 0 1px rgba(255, 92, 122, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(220, 59, 82, 0.24);
 }
 
 /* --------------------------------------------------------------------------
@@ -232,11 +237,11 @@
   background: transparent;
 }
 .scroll-ink::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(16, 24, 60, 0.16);
   border-radius: 99px;
 }
 .scroll-ink::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(16, 24, 60, 0.28);
 }
 
 .scroll-paper::-webkit-scrollbar {
@@ -311,7 +316,7 @@
 
 @keyframes haloRing {
   0% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-core-500) 50%, transparent);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-core-500) 45%, transparent);
   }
   70% {
     box-shadow: 0 0 0 11px transparent;
@@ -366,7 +371,7 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.35),
+    rgba(255, 255, 255, 0.75),
     transparent
   );
   animation: sweep 1.4s linear infinite;
@@ -383,4 +388,11 @@
 }
 .delay-4 {
   animation-delay: 0.2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora::before,
+  .aurora::after {
+    animation: none;
+  }
 }

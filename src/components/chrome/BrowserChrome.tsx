@@ -50,7 +50,7 @@ export const BrowserChrome: React.FC<Props> = ({
   onTogglePanel,
 }) => {
   return (
-    <div className="relative flex flex-col h-full w-full rounded-[14px] overflow-hidden bg-white shadow-[0_40px_90px_-20px_rgba(0,0,0,.6)] ring-1 ring-black/40">
+    <div className="relative flex flex-col h-full w-full rounded-[14px] overflow-hidden bg-white shadow-[0_30px_70px_-24px_rgba(16,24,60,.35)] ring-1 ring-[rgba(16,24,60,.12)]">
       {/* ---- Tab strip ---- */}
       <div className="h-[38px] bg-[#d8dce2] flex items-end shrink-0 pl-2 pr-0 select-none">
         <div className="flex items-center gap-2 h-[30px] pl-3 pr-2 min-w-[228px] bg-white rounded-t-[10px] shadow-[0_-1px_2px_rgba(0,0,0,.06)]">
@@ -110,7 +110,7 @@ export const BrowserChrome: React.FC<Props> = ({
           data-core-toolbar-icon
           className={`relative w-8 h-8 rounded-full flex items-center justify-center transition-all shrink-0 ${
             extensionActive
-              ? 'bg-ink-900 text-core-400'
+              ? 'bg-ink-850 text-core-500'
               : 'text-paper-mid hover:bg-paper-200'
           } ${attention ? 'anim-ring' : ''}`}
           title="CORE AI"
@@ -144,7 +144,7 @@ export const BrowserChrome: React.FC<Props> = ({
       {popup && (
         <div className="absolute top-[80px] right-[104px] z-40 anim-pop">
           {/* Caret penunjuk ke ikon */}
-          <div className="absolute -top-[6px] right-[14px] w-3.5 h-3.5 rotate-45 rounded-[3px] bg-[#191d2e] shadow-[inset_1px_1px_0_rgba(255,255,255,.12)]" />
+          <div className="absolute -top-[6px] right-[14px] w-3.5 h-3.5 rotate-45 rounded-[3px] bg-[#f7f9fd] shadow-[inset_1px_1px_0_rgba(16,24,60,.1)]" />
           {popup}
         </div>
       )}

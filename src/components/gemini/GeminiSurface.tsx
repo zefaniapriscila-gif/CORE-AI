@@ -194,7 +194,7 @@ export const GeminiSurface: React.FC<Props> = ({
               ) : (
                 /* Node yang disuntikkan ekstensi ke dalam DOM Gemini */
                 <div key={t.id} className="flex gap-4 anim-rise">
-                  <span className="w-[26px] h-[26px] shrink-0 mt-0.5 rounded-full bg-ink-900 text-core-400 flex items-center justify-center">
+                  <span className="w-[26px] h-[26px] shrink-0 mt-0.5 rounded-full bg-ink-850 text-core-500 flex items-center justify-center">
                     <CoreMark className="w-[15px] h-[15px]" strokeWidth={2.4} />
                   </span>
                   <div className="relative flex-1 rounded-2xl overflow-hidden bg-ink-950">
@@ -206,7 +206,7 @@ export const GeminiSurface: React.FC<Props> = ({
                       }}
                     />
                     <div className="relative glass px-4 py-3.5">
-                      <div className="font-mono text-[10.5px] text-core-400 mb-1.5">
+                      <div className="font-mono text-[10.5px] text-core-500 mb-1.5">
                         core ai · respons dialihkan
                       </div>
                       <p className="text-[13.5px] leading-[1.7] text-hi/90 whitespace-pre-line">

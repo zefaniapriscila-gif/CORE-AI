@@ -28,7 +28,7 @@ export const LoadingStep: React.FC<Props> = ({ eyebrow, tone, title, lede }) => 
       {[100, 88, 94, 72].map((w, i) => (
         <div
           key={i}
-          className="relative h-3 rounded-full bg-white/6 overflow-hidden anim-sweep"
+          className="relative h-3 rounded-full bg-black/[.06] overflow-hidden anim-sweep"
           style={{ width: `${w}%`, animationDelay: `${i * 90}ms` }}
         />
       ))}
@@ -38,7 +38,7 @@ export const LoadingStep: React.FC<Props> = ({ eyebrow, tone, title, lede }) => 
       {[92, 78, 85].map((w, i) => (
         <div
           key={i}
-          className="relative h-3 rounded-full bg-white/6 overflow-hidden anim-sweep"
+          className="relative h-3 rounded-full bg-black/[.06] overflow-hidden anim-sweep"
           style={{ width: `${w}%`, animationDelay: `${(i + 4) * 90}ms` }}
         />
       ))}

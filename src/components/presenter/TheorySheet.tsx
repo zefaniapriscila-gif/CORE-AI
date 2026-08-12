@@ -23,7 +23,7 @@ export const TheorySheet: React.FC<Props> = ({ stage, open, onClose }) => {
     <div className="absolute inset-0 z-50 flex items-end justify-center">
       <button
         onClick={onClose}
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-[rgba(16,24,60,.28)] backdrop-blur-sm"
         aria-label="Tutup"
       />
 
@@ -87,7 +87,7 @@ export const TheorySheet: React.FC<Props> = ({ stage, open, onClose }) => {
 
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-ink-500 hover:bg-white/7 hover:text-hi transition-colors shrink-0"
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-ink-500 hover:bg-black/[.055] hover:text-hi transition-colors shrink-0"
           >
             <X className="w-[18px] h-[18px]" />
           </button>
