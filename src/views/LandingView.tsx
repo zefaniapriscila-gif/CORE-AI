@@ -42,19 +42,14 @@ export const LandingView: React.FC<Props> = ({ onNavigate }) => (
     </p>
 
     <div className="mt-10 flex flex-wrap items-center justify-center gap-3 anim-rise delay-3">
-      <div className="relative inline-block">
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-[12px] px-2 py-0.5 rounded-full bg-white/10 text-white/90">
-          Coba
-        </span>
-        <button
-          onClick={() => onNavigate('simulasi')}
-          className="transform h-14 px-8 rounded-full text-[15px] font-semibold text-white bg-gradient-to-r from-core-500 to-core-600
-            shadow-[0_14px_40px_-12px_rgba(16,24,60,.45)] inline-flex items-center gap-3 hover:-translate-y-1 hover:shadow-[0_20px_50px_-20px_rgba(16,24,60,.5)] active:scale-[.99] transition-all"
-        >
-          Buka Simulasi
-          <ArrowRight className="w-4 h-4" />
-        </button>
-      </div>
+      <button
+        onClick={() => onNavigate('simulasi')}
+        className="h-14 px-8 rounded-full text-[15px] font-semibold text-white bg-gradient-to-r from-core-500 to-core-600
+          shadow-[0_14px_40px_-12px_rgba(16,24,60,.45)] inline-flex items-center gap-3 hover:-translate-y-1 hover:shadow-[0_20px_50px_-20px_rgba(16,24,60,.5)] active:scale-[.99] transition-all"
+      >
+        Buka Simulasi
+        <ArrowRight className="w-4 h-4" />
+      </button>
 
       <PillButton onClick={() => onNavigate('metodologi')}>Metodologi</PillButton>
       <PillButton onClick={() => onNavigate('tentang')}>Tentang Kami</PillButton>

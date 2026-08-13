@@ -46,10 +46,14 @@ JOBS = [
         # Sumber ini sudah dilepas latarnya di luar skrip, jadi tahap matte
         # dilewati. Hasilnya jauh lebih bersih di tepi hijab daripada saat kami
         # memisahkan latar putihnya sendiri — margin rona di sana cuma 1-2 poin.
-        "src": "risyahnobg.png",
+        "src": "risyahhdnobg.png",
         "slug": "risyah-eka-setyaningrum",
-        "crop": None,  # sumber 573x737, nyaris 3:4
-        "width": 553,
+        "crop": None,  # sumber 2706x3480, nyaris 3:4
+        # Pose berdiri sebadan penuh: kepalanya kecil terhadap bingkai, jadi
+        # resolusi kerja dinaikkan sampai lebar kepala mendekati HEAD_W. Kalau
+        # dirender di 640 seperti kanvas, penyeragaman kepala harus memperbesar
+        # ~1,9x dan tepinya jadi lunak.
+        "width": 1200,
         "bg": "alpha",
         "smooth": 0.0,
     },
@@ -67,28 +71,15 @@ JOBS = [
         "zoom": 0.88,
     },
     {
-        # Satu-satunya foto yang tidak diambil di studio: latarnya dinding
-        # ruangan dengan kursi dan meja. Yang menyelamatkan pemisahannya bukan
-        # warna latar melainkan jasnya — hitam pekat, sementara seluruh latar
-        # terang dan condong dingin.
-        "src": "Satriyo Priyo Adi, S.Psi, M.Sc.jpeg",
+        # Sumber lama foto ruangan berlatar dinding, dan pemisahannya di sini
+        # menyisakan gerigi di bahu. Diganti sumber yang sudah ber-alpha dan
+        # jauh lebih besar, jadi seluruh tahap matte dilewati.
+        "src": "maspipinobg.png",
         "slug": "satriyo-priyo-adi",
-        "crop": None,  # sumber 226x300, praktis 3:4
-        "width": 452,  # naikkan 2x dulu supaya tepi matte tidak berundak
-        "bg": "white",
-        "smooth": 2.0,
-        # Ambang jauh lebih rendah daripada latar studio: dinding terukur 212
-        # dan turun sampai 133 di bagian yang teduh. Kemeja dan dasinya lolos
-        # ambang serendah ini juga, tapi selamat karena terkurung jas — tidak
-        # ada jalur piksel terang yang menyambungkannya ke tepi bingkai.
-        "white_th": (140, 6, 85, 0),
-        # Meja dan kursi di belakangnya nyaris netral, jadi baru tersapu setelah
-        # rambatan panjang. Dua puluh enam langkah menghabisi keduanya dan masih
-        # berhenti jauh sebelum menyentuh wajah.
-        "grow": 26,
-        # Sisa dua bercak: tulisan di dinding sedikit di atas bahu kiri, dan
-        # sudut meja di kanan. Keduanya hangat-netral, di luar jangkauan ambang.
-        "wipe": [(80, 40, 175, 140), (320, 320, 452, 430)],
+        "crop": None,  # sumber 1118x1484, praktis 3:4
+        "width": 620,  # dipilih supaya lebar kepala x zoom jatuh dekat HEAD_W
+        "bg": "alpha",
+        "smooth": 0.0,
         # Kebalikan dari Sarah: ini potret sebatas dada, bukan setengah badan.
         # Pada ukuran kepala yang sama, badannya berhenti seperempat kanvas dari
         # dasar dan kartunya jadi banyak ruang kosong. Dibesarkan sampai penuh —
