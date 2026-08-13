@@ -41,50 +41,15 @@ export const ScaffoldStep: React.FC<Props> = ({
       <p className="text-[12.5px] leading-[1.65] text-mid">{question}</p>
     </div>
 
-    <SectionLabel tone={TONE}>Petunjuk bertahap</SectionLabel>
-
-    <ol className="relative space-y-4 pl-[28px]">
-      <span
-        className="absolute left-[9px] top-2 bottom-2 w-px"
-        style={{
-          background: `linear-gradient(180deg, color-mix(in srgb, ${TONE} 45%, transparent), transparent)`,
-        }}
-      />
-      {hints.map((h, i) => (
-        <li
-          key={h}
-          className="relative anim-rise"
-          style={{ animationDelay: `${i * 70}ms` }}
-        >
-          <span
-            className="absolute -left-[28px] top-[1px] w-[19px] h-[19px] rounded-full
-              flex items-center justify-center font-mono text-[9.5px] font-medium backdrop-blur-md"
-            style={{
-              color: TONE,
-              background: `color-mix(in srgb, ${TONE} 18%, transparent)`,
-              boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${TONE} 40%, transparent)`,
-            }}
-          >
-            {i + 1}
-          </span>
-          <p className="text-[13px] leading-[1.65] text-mid">{h}</p>
-        </li>
-      ))}
-    </ol>
-
-    <SectionLabel tone={TONE}>Jawaban parsial</SectionLabel>
+    <SectionLabel tone={TONE}>Penjelasan</SectionLabel>
 
     <div
       className="rounded-2xl px-4 py-4 core-no-copy backdrop-blur-md glass-tint"
       style={{ ['--tint' as string]: TONE }}
     >
-      <p className="text-[13px] leading-[1.75] text-hi">{partial}</p>
-      <div className="mt-3.5 pt-3.5 hairline-t flex items-center gap-2">
-        <Lock className="w-3 h-3 shrink-0" style={{ color: TONE }} />
-        <span className="font-mono text-[10.5px]" style={{ color: TONE }}>
-          tidak dapat diseleksi
-        </span>
-      </div>
+      <p className="text-[13px] leading-[1.75] text-hi">
+        <strong>Scaffolding Mode memberikan bantuan yang disesuaikan dengan kebutuhan dan kemampuan pengguna.</strong> Ketika pertanyaan lanjutan diajukan, CORE AI tidak lagi memberikan jawaban secara menyeluruh, melainkan mengurangi tingkat bantuan dan menyajikan petunjuk secara bertahap berdasarkan informasi yang telah diberikan sebelumnya. Dengan demikian, pengguna tetap memiliki ruang untuk menghubungkan informasi dan membangun pemahamannya sendiri.
+      </p>
     </div>
   </PanelBody>
 );

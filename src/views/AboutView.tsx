@@ -252,6 +252,7 @@ const MemberCard: React.FC<{
                   loading="lazy"
                   decoding="async"
                   draggable={false}
+                  style={member.slug === 'risyah-eka-setyaningrum' ? { objectPosition: '50% 72%' } : undefined}
                   className="relative w-full h-full object-contain object-bottom select-none
                     origin-bottom transition-transform duration-[1100ms] ease-[cubic-bezier(.16,1,.3,1)]
                     group-hover:scale-[1.045]"

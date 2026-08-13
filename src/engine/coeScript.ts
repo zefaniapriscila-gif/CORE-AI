@@ -38,7 +38,7 @@ export const GOALS: GoalOption[] = [
 export const QUESTION =
   'Jelaskan apa itu cognitive offloading dan dampaknya terhadap working memory mahasiswa';
 
-export const GEMINI_ANSWER = `Cognitive offloading adalah kecenderungan individu mengalihkan proses pengolahan informasi, penalaran, dan pengambilan keputusan kepada sistem eksternal seperti AI.
+export const GEMINI_ANSWER = `Cognitive offloading adalah kecenderungan individu mengalihkan proses pengolahan informasi, penalaran, dan pengambilan keputusan kepada sistem eksternal seperti AI. Kecenderungan ini memiliki arah yang berlawanan dengan proses belajar yang menuntut individu untuk kembali mengandalkan kapasitas kognitifnya sendiri dalam mengolah dan memanggil informasi. Prinsip tersebut tercermin dalam retrieval practice, ketika informasi tidak sekadar tersedia untuk diakses, tetapi perlu diaktifkan kembali melalui proses mengingat.
 
 Dampaknya terhadap working memory mahasiswa:
 

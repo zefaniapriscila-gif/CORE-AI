@@ -57,7 +57,22 @@ function buildTurns(stage: Stage, answer: string, answerReady: boolean): Turn[] 
   const handover: Turn = {
     id: 'c',
     role: 'core',
-    text: 'Pertanyaan yang tadi ditahan sudah dilepas. Responsnya tidak diberikan utuh — Scaffold Prompt Builder memecahnya jadi petunjuk bertahap di panel kanan.',
+    text: 'Pertanyaan yang tadi ditahan sudah dilepas. Responsnya tidak diberikan utuh — Scaffold Prompt Builder menyesuaikan respons berdasarkan kemampuan pengguna dan menguraikan bantuan ke dalam petunjuk bertahap.',
+  };
+
+  const coreScaffoldAnswer: Turn = {
+    id: 'c2',
+    role: 'core',
+    text:
+      'Bagaimana mencegah <strong>cognitive offloading</strong> saat menggunakan AI?<br/><br/>' +
+      '<strong>01 — Aktifkan Pengetahuan Awal</strong><br/>' +
+      'Coba ingat kembali informasi yang sudah kamu ketahui sebelum meminta bantuan AI.<br/><br/>' +
+      '<strong>02 — Rumuskan Pemahaman</strong><br/>' +
+      'Susun pemikiran atau kemungkinan jawaban berdasarkan pemahamanmu sendiri.<br/><br/>' +
+      '<strong>03 — Gunakan AI sebagai Pendukung</strong><br/>' +
+      'Minta AI menguji, memperjelas, atau mengembangkan pemahaman yang sudah kamu bangun.<br/><br/>' +
+      '<strong>04 — Evaluasi Kembali</strong><br/>' +
+      'Bandingkan respons AI dengan pemikiranmu dan tentukan bagian yang perlu diperbaiki atau diperdalam.',
   };
 
   const answered = answerReady ? [a] : [];
@@ -74,7 +89,7 @@ function buildTurns(stage: Stage, answer: string, answerReady: boolean): Turn[] 
       return [q, ...answered, heldFollowUp];
     case 'scaffold':
     case 'rating':
-      return [q, ...answered, sentFollowUp, handover];
+      return [q, ...answered, sentFollowUp, handover, coreScaffoldAnswer];
     default:
       return [];
   }
