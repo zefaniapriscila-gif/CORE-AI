@@ -3,7 +3,7 @@ import { DotField } from './components/site/DotField';
 import { SiteHeader } from './components/site/SiteHeader';
 import { AboutView } from './views/AboutView';
 import { LandingView } from './views/LandingView';
-import { PlaceholderView } from './views/PlaceholderView';
+import { MethodologyView } from './views/MethodologyView';
 import { SimulationView } from './views/SimulationView';
 import { SiteView } from './engine/siteTypes';
 import { SoundProvider } from './utils/SoundProvider';
@@ -35,9 +35,7 @@ export default function App() {
           <SiteHeader view={view} onNavigate={setView} />
 
           {view === 'landing' && <LandingView onNavigate={setView} />}
-          {view === 'metodologi' && (
-            <PlaceholderView title="Metodologi" onNavigate={setView} />
-          )}
+          {view === 'metodologi' && <MethodologyView onNavigate={setView} />}
           {view === 'tentang' && <AboutView onNavigate={setView} />}
         </div>
       )}
