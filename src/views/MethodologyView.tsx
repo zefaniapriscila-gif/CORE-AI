@@ -86,7 +86,7 @@ const MODES = [
     tint2: 'var(--color-core-400)',
     lead: 'Pertanyaan lanjutan ditahan. Kamu yang ditanya lebih dulu.',
     body: 'Ketika pertanyaan lanjutan diajukan, CORE AI tidak langsung memberikan jawaban. Sistem menghadirkan pertanyaan Socratic yang mendorong pengguna mengaktifkan pengetahuan awal, menguji pemahaman, dan menemukan arah jawaban secara mandiri.',
-    marks: ['Pengiriman ditahan', '3 pertanyaan pemantik'],
+    marks: ['Pengiriman ditahan', 'Pertanyaan pemantik'],
   },
   {
     key: 'reflective',
@@ -110,7 +110,7 @@ const MODES = [
     tint2: 'var(--color-mode-reflective)',
     lead: 'Petunjuk diberi sepotong demi sepotong, sisanya kamu yang isi.',
     body: 'Ketika pertanyaan lanjutan menunjukkan kebutuhan bantuan lebih jauh, CORE AI menyesuaikan dukungan dengan kemampuan pengguna. Alih-alih menyerahkan jawaban utuh, sistem menyajikan petunjuk bertahap agar pengguna membangun penalarannya sendiri.',
-    marks: ['3 petunjuk bertahap', '1 jawaban rumpang'],
+    marks: ['AI menyesuaikan bantuan berdasarkan kemampuan dan kebutuhan kognitif pengguna'],
   },
 ];
 
@@ -218,10 +218,11 @@ const Reveal: React.FC<{
 const SectionHead: React.FC<{
   kicker: string;
   title: React.ReactNode;
-  lead: string;
+  lead: React.ReactNode;
   tone: string;
-}> = ({ kicker, title, lead, tone }) => (
-  <div className="max-w-[620px]">
+  maxWidthClass?: string;
+}> = ({ kicker, title, lead, tone, maxWidthClass = 'max-w-[620px]' }) => (
+  <div className={maxWidthClass}>
     <div className="flex items-center gap-2">
       <span
         className="w-1.5 h-1.5 rounded-full shrink-0"
@@ -236,7 +237,7 @@ const SectionHead: React.FC<{
       {title}
     </h2>
 
-    <p className="mt-2.5 text-[14px] md:text-[14.5px] leading-[1.72] text-mid">
+    <p className="mt-2.5 text-[14px] md:text-[14.5px] leading-[1.72] text-mid text-justify">
       {lead}
     </p>
   </div>
@@ -543,13 +544,17 @@ export const MethodologyView: React.FC<Props> = ({ onNavigate }) => (
             <SectionHead
               kicker="Mesin"
               tone="var(--color-core-500)"
+              maxWidthClass="max-w-[980px]"
               title={
                 <>
-                  Bukan penyempurna prompt.{' '}
-                  <span className="text-core-500">Pengatur alurnya.</span>
+                  Structured Prompting: <span className="text-core-500">Menata Alur Interaksi</span>
                 </>
               }
-              lead="COE mengubah structured prompting dari perintah manual menjadi intervensi kognitif yang berjalan sendiri. Tiga sub-modul bekerja berurutan: membaca konteks, menguji pemahaman, lalu mengarahkan ke mode berpikir yang sesuai."
+              lead={
+                <>
+                  COE mengembangkan <strong>structured prompting</strong> dari sekadar instruksi manual menjadi alur interaksi kognitif yang berlangsung secara adaptif dan otomatis. Ketiga submodulnya bekerja secara berurutan untuk memahami konteks pengguna, menguji tingkat pemahamannya, serta menentukan mode berpikir yang paling sesuai dengan kebutuhan kognitif pengguna.
+                </>
+              }
             />
           </Reveal>
 
@@ -619,7 +624,7 @@ export const MethodologyView: React.FC<Props> = ({ onNavigate }) => (
                   <span className="text-mode-socratic">satu alur berpikir</span>
                 </>
               }
-              lead="Tiap mode punya satu tugas: membuat kamu tidak berhenti di jawaban, tetapi ikut menyusunnya. Urutannya mengikuti perjalanan satu sesi, dari pertanyaan pertama sampai bantuan terakhir."
+              lead="Setiap mode menjalankan satu tujuan: memastikan kamu tidak berhenti pada jawaban, tetapi turut membangun pemahamanmu. Keempat mode tersusun secara progresif mengikuti alur interaksi, mulai dari pertanyaan pemantik hingga pemberian bantuan yang semakin adaptif."
             />
           </Reveal>
 
@@ -659,7 +664,7 @@ export const MethodologyView: React.FC<Props> = ({ onNavigate }) => (
                     >
                       <div className="aurora opacity-45 transition-opacity duration-500 group-hover:opacity-75" />
 
-                      <div className="relative z-10">
+                      <div className="relative z-10 w-full">
                         <div className="flex items-start gap-2.5">
                           <span
                             className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center mt-px"
@@ -685,11 +690,18 @@ export const MethodologyView: React.FC<Props> = ({ onNavigate }) => (
                           </div>
                         </div>
 
-                        <p className="mt-3 text-[13.5px] md:text-[14px] font-medium leading-[1.6] text-hi">
+                        <p
+                          className={
+                            `mt-3 text-[13.5px] md:text-[14px] font-medium leading-[1.6] text-hi w-full text-justify`
+                          }
+                        >
                           {m.lead}
                         </p>
 
-                        <p className="mt-1.5 text-[12.5px] md:text-[13px] leading-[1.72] text-mid max-w-[62ch]">
+                        <p className={
+                          `mt-1.5 text-[12.5px] md:text-[13px] leading-[1.72] text-mid ` +
+                          (m.key === 'normal' ? 'max-w-none' : 'max-w-[62ch]')
+                        }>
                           {m.body}
                         </p>
 
@@ -721,7 +733,7 @@ export const MethodologyView: React.FC<Props> = ({ onNavigate }) => (
                   <span className="text-mode-reflective">rangkuman</span>
                 </>
               }
-              lead="Setiap rangkuman di Reflective Mode diperiksa dua kali. Lapis pertama menghitung panjang elaborasi, lapis kedua mengukur kemiripan semantik dengan jawaban asli AI. Lewat ambangnya, sistem membacanya sebagai jawaban yang dipindahkan, bukan dipahami."
+              lead="Setiap rangkuman dalam Reflective Mode melalui dua tahap pemeriksaan. Tahap pertama menilai kedalaman elaborasi, sedangkan tahap kedua mengukur kemiripan semantik antara rangkuman dan jawaban asli AI. Jika kemiripan melampaui ambang yang ditetapkan, sistem mengidentifikasi bahwa rangkuman tersebut tidak mencerminkan pemahaman mandiri pengguna."
             />
           </Reveal>
 
@@ -750,7 +762,7 @@ export const MethodologyView: React.FC<Props> = ({ onNavigate }) => (
                   <span className="text-mode-comparison">temuan yang sudah ada</span>
                 </>
               }
-              lead="Titik berangkatnya kajian cognitive offloading dan keterlibatan korteks prefrontal. Dari sana, tiap mekanisme diambil dari prinsip belajar yang sudah diuji, bukan dirancang dari nol."
+              lead="Perancangannya berangkat dari kajian cognitive offloading dan keterlibatan korteks prefrontal dalam mempertahankan proses kognitif. Berdasarkan landasan tersebut, setiap mekanisme dirancang dengan mengadaptasi prinsip-prinsip pembelajaran yang telah memperoleh dukungan empiris."
             />
           </Reveal>
 
