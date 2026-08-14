@@ -221,7 +221,7 @@ const SectionHead: React.FC<{
   lead: React.ReactNode;
   tone: string;
   maxWidthClass?: string;
-}> = ({ kicker, title, lead, tone, maxWidthClass = 'max-w-[620px]' }) => (
+}> = ({ kicker, title, lead, tone, maxWidthClass = 'w-full' }) => (
   <div className={maxWidthClass}>
     <div className="flex items-center gap-2">
       <span
@@ -237,7 +237,7 @@ const SectionHead: React.FC<{
       {title}
     </h2>
 
-    <p className="mt-2.5 text-[14px] md:text-[14.5px] leading-[1.72] text-mid text-justify">
+    <p className="mt-2.5 text-[14px] md:text-[14.5px] leading-[1.72] text-mid text-justify w-full">
       {lead}
     </p>
   </div>
@@ -345,13 +345,13 @@ const ValidatorLab: React.FC = () => {
 
           <div className="mt-2.5 rounded-2xl glass-soft p-3.5">
             <div className="core-no-copy core-locked">
-              <p className="text-[12.5px] leading-[1.72] text-mid">
+              <p className="text-[12.5px] leading-[1.72] text-mid text-justify w-full">
                 {RAW_EXCERPT}
               </p>
             </div>
           </div>
 
-          <p className="mt-3 text-[12px] leading-[1.65] text-lo">
+          <p className="mt-3 text-[12px] leading-[1.65] text-lo text-justify w-full">
             Coba seleksi paragraf di atas. Selama Reflective Mode, teks AI
             dikunci lewat <span className="font-mono">user-select: none</span>{' '}
             supaya rangkuman benar-benar disusun ulang, bukan dipindahkan.
@@ -453,7 +453,7 @@ const ValidatorLab: React.FC = () => {
               className="w-4 h-4 shrink-0 mt-px"
               style={{ color: verdict.tone }}
             />
-            <p className="text-[12.5px] leading-[1.6] text-mid">{verdict.text}</p>
+            <p className="text-[12.5px] leading-[1.6] text-mid text-justify flex-1">{verdict.text}</p>
           </div>
         </div>
       </div>
@@ -597,7 +597,7 @@ export const MethodologyView: React.FC<Props> = ({ onNavigate }) => (
                         {s.name}
                       </h3>
 
-                      <p className="mt-1.5 text-[12.5px] leading-[1.7] text-mid">
+                      <p className="mt-1.5 text-[12.5px] leading-[1.7] text-mid text-justify w-full">
                         {s.body}
                       </p>
 
@@ -690,18 +690,11 @@ export const MethodologyView: React.FC<Props> = ({ onNavigate }) => (
                           </div>
                         </div>
 
-                        <p
-                          className={
-                            `mt-3 text-[13.5px] md:text-[14px] font-medium leading-[1.6] text-hi w-full text-justify`
-                          }
-                        >
+                        <p className="mt-3 text-[13.5px] md:text-[14px] font-medium leading-[1.6] text-hi w-full text-justify">
                           {m.lead}
                         </p>
 
-                        <p className={
-                          `mt-1.5 text-[12.5px] md:text-[13px] leading-[1.72] text-mid ` +
-                          (m.key === 'normal' ? 'max-w-none' : 'max-w-[62ch]')
-                        }>
+                        <p className="mt-1.5 text-[12.5px] md:text-[13px] leading-[1.72] text-mid w-full text-justify">
                           {m.body}
                         </p>
 
@@ -742,7 +735,7 @@ export const MethodologyView: React.FC<Props> = ({ onNavigate }) => (
           </Reveal>
 
           <Reveal delay={120}>
-            <p className="mt-3 text-[12px] leading-[1.65] text-lo max-w-[620px]">
+            <p className="mt-3 text-[12px] leading-[1.65] text-lo w-full text-justify">
               Kotak di atas memanggil validator yang sama dengan yang dipakai
               simulasi, jadi angkanya bukan ilustrasi. Di produksi, lapis kedua
               memakai embedding sentence-transformer.
@@ -789,7 +782,7 @@ export const MethodologyView: React.FC<Props> = ({ onNavigate }) => (
                     {r.topic}
                   </h3>
 
-                  <p className="mt-1.5 text-[12.5px] leading-[1.7] text-mid">
+                  <p className="mt-1.5 text-[12.5px] leading-[1.7] text-mid text-justify w-full">
                     {r.body}
                   </p>
 
