@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { BrowserChrome } from '../components/chrome/BrowserChrome';
+import { BrowserChrome, TabItem } from '../components/chrome/BrowserChrome';
 import { ExtensionPopup } from '../components/chrome/ExtensionPopup';
 import { GeminiSurface } from '../components/gemini/GeminiSurface';
 import { CorePanel } from '../components/panel/CorePanel';
@@ -15,6 +15,8 @@ import { PresenterDock } from '../components/presenter/PresenterDock';
 import { TheorySheet } from '../components/presenter/TheorySheet';
 import { PanelBody } from '../components/panel/CorePanel';
 import { PrimaryButton } from '../components/ui/primitives';
+import { ToastContainer, ToastMessage } from '../components/ui/Toast';
+import { GeminiSpark } from '../components/gemini/GeminiSpark';
 import {
   MODE_COLOR,
   Stage,
@@ -123,6 +125,34 @@ export const SimulationView: React.FC<Props> = ({ onHome }) => {
 
   const [theoryOpen, setTheoryOpen] = useState(false);
 
+  // Window & browser states
+  const [isMaximized, setIsMaximized] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [isReloading, setIsReloading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('Gemini 2.5 Flash');
+  const [isNewChatActive, setIsNewChatActive] = useState(false);
+  const [tabs, setTabs] = useState<TabItem[]>([
+    { id: 'gemini-main', title: 'Gemini', active: true },
+  ]);
+
+  // Toast feedback state
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  const addToast = useCallback(
+    (title: string, description?: string, type: 'success' | 'info' | 'warning' = 'info') => {
+      const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
+      setToasts((prev) => [...prev.slice(-3), { id, title, description, type }]);
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, 3200);
+    },
+    []
+  );
+
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
   const {
     content,
     source,
@@ -139,14 +169,17 @@ export const SimulationView: React.FC<Props> = ({ onHome }) => {
   const coeOn = goal === 'instrumental';
 
   const answerReady = source.answer !== 'pending';
-  const turns = useMemo(
+  const baseTurns = useMemo(
     () => buildTurns(stage, content.answer, answerReady),
     [stage, content.answer, answerReady],
   );
 
+  const turns = isNewChatActive ? [] : baseTurns;
+
   /* --- Navigasi ------------------------------------------------------- */
 
   const go = useCallback((next: Stage) => {
+    setIsNewChatActive(false);
     setStage(next);
     setReached((prev) => new Set(prev).add(next));
 
@@ -164,9 +197,13 @@ export const SimulationView: React.FC<Props> = ({ onHome }) => {
   }, []);
 
   const idx = STAGE_ORDER.indexOf(stage);
+  const canGoBack = idx > 0;
+  const canGoForward = idx < STAGE_ORDER.length - 1;
+
   const goPrev = useCallback(() => {
     if (idx > 0) go(STAGE_ORDER[idx - 1]);
   }, [idx, go]);
+
   const goNext = useCallback(() => {
     if (idx < STAGE_ORDER.length - 1) go(STAGE_ORDER[idx + 1]);
   }, [idx, go]);
@@ -182,8 +219,63 @@ export const SimulationView: React.FC<Props> = ({ onHome }) => {
     setRating(0);
     setRatingSubmitted(false);
     setTheoryOpen(false);
+    setIsNewChatActive(false);
     resetCoe();
   }, [resetCoe]);
+
+  const handleReload = useCallback(() => {
+    setIsReloading(true);
+    addToast('Memuat Ulang Halaman...', 'Memperbarui sesi peramban', 'info');
+    setTimeout(() => {
+      setIsReloading(false);
+      addToast('Selesai Memuat', 'Halaman Gemini berhasil diperbarui', 'success');
+    }, 450);
+  }, [addToast]);
+
+  const handleNewTab = useCallback(() => {
+    const newId = `tab-${Date.now()}`;
+    const nextTabNumber = tabs.length + 1;
+    setTabs((prev) => [
+      ...prev.map((t) => ({ ...t, active: false })),
+      { id: newId, title: `Gemini (${nextTabNumber})`, active: true },
+    ]);
+    setIsNewChatActive(true);
+    setDraft('');
+    addToast('Tab Baru Dibuka', `Gemini (${nextTabNumber}) aktif`, 'info');
+  }, [tabs.length, addToast]);
+
+  const handleSelectTab = useCallback((id: string) => {
+    setTabs((prev) =>
+      prev.map((t) => ({
+        ...t,
+        active: t.id === id,
+      }))
+    );
+  }, []);
+
+  const handleCloseTab = useCallback(
+    (id: string) => {
+      if (tabs.length <= 1) {
+        onHome();
+        return;
+      }
+      const remaining = tabs.filter((t) => t.id !== id);
+      const wasActive = tabs.find((t) => t.id === id)?.active;
+      if (wasActive && remaining.length > 0) {
+        remaining[remaining.length - 1].active = true;
+      }
+      setTabs(remaining);
+      addToast('Tab Ditutup', undefined, 'info');
+    },
+    [tabs, onHome, addToast]
+  );
+
+  const handleNewChat = useCallback(() => {
+    setIsNewChatActive(true);
+    setDraft('');
+    setGoal('instrumental');
+    setPopupOpen(false);
+  }, []);
 
   /* --- Pemicu panggilan model ------------------------------------------ */
 
@@ -229,7 +321,10 @@ export const SimulationView: React.FC<Props> = ({ onHome }) => {
       const typing =
         el instanceof HTMLTextAreaElement || el instanceof HTMLInputElement;
 
-      if (e.key === 'Escape') return setTheoryOpen(false);
+      if (e.key === 'Escape') {
+        setTheoryOpen(false);
+        return;
+      }
       if (typing) return;
       if (e.key === 'ArrowRight') goNext();
       if (e.key === 'ArrowLeft') goPrev();
@@ -244,6 +339,7 @@ export const SimulationView: React.FC<Props> = ({ onHome }) => {
   const pickGoal = (g: UserGoal) => {
     setGoal(g);
     setPopupOpen(false);
+    setIsNewChatActive(false);
     if (GOALS.find((o) => o.id === g)?.activatesCoe) {
       setStage('normal');
       setReached((prev) => new Set(prev).add('normal'));
@@ -255,7 +351,18 @@ export const SimulationView: React.FC<Props> = ({ onHome }) => {
 
   /** Enter di composer Gemini saat Normal Mode memicu interception. */
   const submitDraft = () => {
-    if (stage === 'normal' && draft.trim()) go('intercept');
+    if (isNewChatActive) {
+      setIsNewChatActive(false);
+      setGoal('instrumental');
+      setStage('normal');
+      setReached((prev) => new Set(prev).add('normal'));
+      void ensureAnswer().then(() => setDraft(FOLLOW_UP));
+      return;
+    }
+
+    if (stage === 'normal' && draft.trim()) {
+      go('intercept');
+    }
   };
 
   const metrics = [
@@ -426,46 +533,102 @@ export const SimulationView: React.FC<Props> = ({ onHome }) => {
         }}
       />
 
-      <div className="flex-1 min-h-0 p-6 pb-2 relative">
-        <BrowserChrome
-          extensionActive={coeOn}
-          attention={stage === 'goal' && !goal}
-          panelOpen={panelVisible}
-          onTogglePanel={() =>
-            stage === 'goal' ? setPopupOpen((v) => !v) : undefined
-          }
-          popup={
-            popupOpen && stage === 'goal' ? (
-              <ExtensionPopup onSelect={pickGoal} selected={goal} />
-            ) : undefined
-          }
-        >
-          <GeminiSurface
-            turns={turns}
-            draft={draft}
-            onDraftChange={setDraft}
-            onSubmit={submitDraft}
-            intercepted={stage === 'intercept'}
-            locked={stage === 'reflective'}
-            thinking={coeOn && loading.answer}
-            coeActive={coeOn && panelVisible}
-          />
+      <div
+        className={`flex-1 min-h-0 relative transition-all duration-300 ${
+          isMaximized ? 'p-0 pb-0' : 'p-6 pb-2'
+        }`}
+      >
+        {/* Browser Window (Visible unless minimized) */}
+        {!isMinimized && (
+          <BrowserChrome
+            extensionActive={coeOn}
+            attention={stage === 'goal' && !goal}
+            panelOpen={panelVisible}
+            onTogglePanel={() =>
+              stage === 'goal' ? setPopupOpen((v) => !v) : undefined
+            }
+            onClose={onHome}
+            onMinimize={() => {
+              setIsMinimized(true);
+              addToast('Jendela Diminimalkan', 'Klik tombol di bawah untuk memulihkan', 'info');
+            }}
+            onToggleMaximize={() => setIsMaximized((v) => !v)}
+            isMaximized={isMaximized}
+            canGoBack={canGoBack}
+            onBack={goPrev}
+            canGoForward={canGoForward}
+            onForward={goNext}
+            onReload={handleReload}
+            isReloading={isReloading}
+            tabs={tabs}
+            onSelectTab={handleSelectTab}
+            onCloseTab={handleCloseTab}
+            onNewTab={handleNewTab}
+            onToast={addToast}
+            popup={
+              popupOpen && stage === 'goal' ? (
+                <ExtensionPopup onSelect={pickGoal} selected={goal} />
+              ) : undefined
+            }
+          >
+            <GeminiSurface
+              turns={turns}
+              draft={draft}
+              onDraftChange={setDraft}
+              onSubmit={submitDraft}
+              intercepted={stage === 'intercept'}
+              locked={stage === 'reflective'}
+              thinking={coeOn && loading.answer}
+              coeActive={coeOn && panelVisible}
+              onNewChat={handleNewChat}
+              selectedModel={selectedModel}
+              onSelectModel={setSelectedModel}
+              onToast={addToast}
+            />
 
-          {panelVisible && step && (
-            <CorePanel
-              mode={step.mode}
-              module={step.module}
-              consoleLines={consoleLines}
-            >
-              {renderPanel()}
-            </CorePanel>
-          )}
-        </BrowserChrome>
+            {panelVisible && step && (
+              <CorePanel
+                mode={step.mode}
+                module={step.module}
+                consoleLines={consoleLines}
+              >
+                {renderPanel()}
+              </CorePanel>
+            )}
+          </BrowserChrome>
+        )}
+
+        {/* Minimized Dock Restoration Pill */}
+        {isMinimized && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="pointer-events-auto anim-pop">
+              <button
+                onClick={() => {
+                  setIsMinimized(false);
+                  addToast('Jendela Dipulihkan', undefined, 'info');
+                }}
+                className="flex items-center gap-3.5 px-6 py-4 rounded-3xl bg-white shadow-[0_20px_50px_-12px_rgba(16,24,60,.25)] ring-1 ring-black/[.08] hover:scale-105 transition-all text-paper-ink group cursor-pointer"
+              >
+                <div className="w-10 h-10 rounded-2xl bg-paper-100 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
+                  <GeminiSpark className="w-6 h-6" />
+                </div>
+                <div className="text-left pr-2">
+                  <div className="text-[14px] font-semibold text-paper-ink group-hover:text-core-600 transition-colors">
+                    Google Chrome — Gemini
+                  </div>
+                  <div className="text-[12px] text-paper-mid mt-0.5">
+                    Jendela peramban diminimalkan · Klik untuk pulihkan
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Panel penolakan saat tujuan non-instrumental dipilih */}
         {stage === 'goal' && goal && goal !== 'instrumental' && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="pointer-events-auto relative w-[390px] rounded-3xl overflow-hidden bg-ink-950 anim-pop">
+            <div className="pointer-events-auto relative w-[390px] rounded-3xl overflow-hidden bg-ink-950 anim-pop shadow-2xl">
               <div
                 className="aurora"
                 style={{
@@ -499,6 +662,9 @@ export const SimulationView: React.FC<Props> = ({ onHome }) => {
           open={theoryOpen}
           onClose={() => setTheoryOpen(false)}
         />
+
+        {/* Floating Toast Notification Container */}
+        <ToastContainer toasts={toasts} onDismiss={removeToast} />
       </div>
 
       <PresenterDock
